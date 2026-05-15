@@ -703,18 +703,20 @@
 
     // Função SIMPLES: só reorganiza DATE(ano,mes,dia) para dia/mes/ano
     function converterDataSimples(valor) {
-        if (!valor) return '';
-        let str = String(valor);
-        if (str.indexOf('DATE(') === 0) {
-            let conteudo = str.substring(5, str.length - 1);
-            let partes = conteudo.split(',');
-            let ano = partes[0].trim();
-            let mes = partes[1].trim();
-            let dia = partes[2].trim();
-            return dia.padStart(2, '0') + '/' + mes.padStart(2, '0') + '/' + ano;
-        }
-        return str;
+    if (!valor) return '';
+    let str = String(valor);
+    
+    // Procura por DATE( ou Date( (maiúsculo ou minúsculo)
+    let match = str.match(/Date\((\d+),(\d+),(\d+)\)/i);
+    if (match) {
+        let ano = match[1];
+        let mes = match[2];
+        let dia = match[3];
+        return dia.padStart(2, '0') + '/' + mes.padStart(2, '0') + '/' + ano;
     }
+    
+    return str;
+}
 
     async function carregarDados() {
         try {
