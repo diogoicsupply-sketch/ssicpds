@@ -741,9 +741,7 @@
         return valor;
     }
 
-   // Substitua a função carregarDados() por esta versão CORRIGIDA:
-
-async function carregarDados() {
+ async function carregarDados() {
     try {
         const response = await fetch(URL_API);
         const text = await response.text();
@@ -752,58 +750,38 @@ async function carregarDados() {
         const colunas = data.table.cols.map(col => col.label);
         const linhas = data.table.rows.map(row => row.c.map(cell => cell ? cell.v : ""));
         
-        dadosPlanilha = linhas.slice(1).map(linha => {
-            const obj = {};
-            colunas.forEach((col, idx) => { 
-                let valor = linha[idx];
-                
-                // CORREÇÃO DIRETA DA DATA AQUI!
-                if (col === "Data" && valor && String(valor).includes('DATE(')) {
-                    // Processa o formato DATE(ano,mes,dia)
-                    let valorStr = String(valor);
-                    let numeros = valorStr.replace('DATE(', '').replace(')', '');
-                    let partes = numeros.split(',');
-                    let ano = partes[0].trim();
-                    let mes = partes[1].trim();
-                    let dia = partes[2].trim();
-                    // Formata como DD/MM/AAAA
-                    valor = `${dia.padStart(2,'0')}/${mes.padStart(2,'0')}/${ano}`;
-                }
-                
-                obj[col] = valor; 
-            });
-            return obj;
-        }).filter(s => s["N° SS"] || s["Nº SS"]);
+        dadosPlanilha = [];
         
-        // Fallback caso os cabeçalhos não sejam detectados
-        if (dadosPlanilha.length === 0 && linhas.length > 1) {
-            dadosPlanilha = linhas.slice(1).map(linha => {
-                let dataValor = linha[5];
-                // CORREÇÃO DA DATA NO FALLBACK
-                if (dataValor && String(dataValor).includes('DATE(')) {
-                    let valorStr = String(dataValor);
-                    let numeros = valorStr.replace('DATE(', '').replace(')', '');
-                    let partes = numeros.split(',');
-                    let ano = partes[0].trim();
-                    let mes = partes[1].trim();
-                    let dia = partes[2].trim();
-                    dataValor = `${dia.padStart(2,'0')}/${mes.padStart(2,'0')}/${ano}`;
-                }
-                return {
-                    "N° SS": linha[0], 
-                    "Local": linha[1], 
-                    "Descrição": linha[2],
-                    "Status": linha[3], 
-                    "Requisitante": linha[4], 
-                    "Data": dataValor
-                };
+        for (let i = 1; i < linhas.length; i++) {
+            const linha = linhas[i];
+            let dataOriginal = linha[5]; // Coluna da data (índice 5)
+            let dataFormatada = dataOriginal;
+            
+            // Se for DATE(ano,mes,dia), converte para dia/mes/ano
+            if (dataOriginal && String(dataOriginal).indexOf('DATE(') === 0) {
+                let conteudo = String(dataOriginal).substring(5, String(dataOriginal).length - 1);
+                let partes = conteudo.split(',');
+                let ano = partes[0].trim();
+                let mes = partes[1].trim();
+                let dia = partes[2].trim();
+                // Formato DIA/MES/ANO (exatamente como está na planilha)
+                dataFormatada = dia.padStart(2, '0') + '/' + mes.padStart(2, '0') + '/' + ano;
+            }
+            
+            dadosPlanilha.push({
+                "N° SS": linha[0],
+                "Local": linha[1],
+                "Descrição": linha[2],
+                "Status": linha[3],
+                "Requisitante": linha[4],
+                "Data": dataFormatada
             });
         }
         
         aplicarFiltros();
     } catch (error) {
         console.error("Erro:", error);
-        document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. </td></tr>';
+        document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. 背部</tr>';
     }
 }
 
