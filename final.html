@@ -1,0 +1,1089 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de SS e PTs - Porto de Santos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* Login */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a2b3e, #0a1c2a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .login-box h2 {
+            color: #0a2b3e;
+            margin-bottom: 8px;
+        }
+
+        .login-box h3 {
+            color: #2c6e9e;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 10px 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: #2c6e9e;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 14px;
+            background: #2c6e9e;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .login-box button:hover {
+            background: #1a4a6e;
+            transform: translateY(-2px);
+        }
+
+        /* Container Principal */
+        .app-container {
+            display: none;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0a2b3e, #0e3a52);
+            color: white;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo-area h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .logo-area p {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Botões */
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            background: #2c6e9e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1a4a6e;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: #0a2b3e;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 0.75rem;
+        }
+
+        /* Cards de Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+            border-left: 4px solid;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .metric-card .label {
+            color: #64748b;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-card.total { border-left-color: #3b82f6; }
+        .metric-card.planejada { border-left-color: #f59e0b; }
+        .metric-card.andamento { border-left-color: #2c6e9e; }
+        .metric-card.concluida { border-left-color: #10b981; }
+        .metric-card.atrasada { border-left-color: #ef4444; }
+        .metric-card.pts { border-left-color: #8b5cf6; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 24px;
+            cursor: pointer;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: #475569;
+        }
+
+        .tab:hover {
+            background: #e2e8f0;
+        }
+
+        .tab.active {
+            background: #2c6e9e;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+            padding: 0 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Barra de Ferramentas */
+        .toolbar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .search-group {
+            display: flex;
+            gap: 10px;
+            flex: 2;
+        }
+
+        .search-group input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .search-group input:focus {
+            outline: none;
+            border-color: #2c6e9e;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        /* Tabela */
+        .table-wrapper {
+            background: white;
+            border-radius: 16px;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.85rem;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-planejada { background: #fef3c7; color: #d97706; }
+        .status-andamento { background: #dbeafe; color: #2563eb; }
+        .status-concluida { background: #d1fae5; color: #059669; }
+        .status-atrasada { background: #fee2e2; color: #dc2626; }
+
+        /* PT Sub-linhas */
+        .pt-row td {
+            background: #fafcff;
+            padding: 10px 16px;
+        }
+
+        .pt-card-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .pt-tag {
+            background: #e2e8f0;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            color: #475569;
+        }
+
+        .expand-icon {
+            cursor: pointer;
+            display: inline-block;
+            width: 24px;
+            text-align: center;
+            font-weight: bold;
+            color: #2c6e9e;
+            font-size: 1rem;
+        }
+
+        .badge-pt {
+            background: #2c6e9e;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+        }
+
+        /* Dashboard Analytics */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .analytics-card h3 {
+            font-size: 1rem;
+            color: #1e293b;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ranking-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .ranking-name {
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .ranking-count {
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #2c6e9e;
+        }
+
+        .kpi-large {
+            text-align: center;
+            padding: 15px;
+        }
+
+        .kpi-large .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c6e9e;
+        }
+
+        .kpi-large .label {
+            color: #64748b;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        /* Modais */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .close-modal {
+            font-size: 28px;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #ef4444;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #2c6e9e;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .pt-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                padding: 0 12px;
+            }
+
+            .metric-card .value {
+                font-size: 1.5rem;
+            }
+
+            th, td {
+                padding: 8px 10px;
+                font-size: 0.7rem;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+
+            .tabs, .tab-content {
+                padding: 0 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <h2>⚓ Porto de Santos</h2>
+        <h3>Sistema de Gestão de SS e PTs</h3>
+        <div id="loginArea">
+            <input type="text" id="loginUsuario" placeholder="Usuário" onkeypress="handleLoginEnter(event)">
+            <input type="password" id="loginSenha" placeholder="Senha" onkeypress="handleLoginEnter(event)">
+            <button onclick="fazerLogin()">Entrar no Sistema</button>
+        </div>
+        <div id="loginError" style="color: #ef4444; margin-top: 12px; font-size: 0.85rem;"></div>
+        <hr style="margin: 20px 0; border-color: #e2e8f0;">
+        <button onclick="abrirModalPrimeiroAcesso()" style="background: #f1f5f9; color: #475569; padding: 10px 20px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">Primeiro Acesso</button>
+    </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL -->
+<div id="mainContent" class="app-container">
+    <div class="header">
+        <div class="logo-area">
+            <h1>⚓ Gestão de SS e PTs</h1>
+            <p>Porto de Santos - Solicitações de Serviço e Permissões de Trabalho</p>
+        </div>
+        <div class="user-area">
+            <span id="nomeUsuario" style="font-weight: 500;"></span>
+            <button class="btn btn-outline btn-sm" onclick="abrirModalTrocarSenha()">🔒 Trocar Senha</button>
+            <button class="btn btn-danger btn-sm" onclick="fazerLogout()">Sair</button>
+        </div>
+    </div>
+
+    <!-- MÉTRICAS PRINCIPAIS -->
+    <div class="metrics-grid">
+        <div class="metric-card total">
+            <div class="value" id="totalSS">0</div>
+            <div class="label">Total de SS</div>
+        </div>
+        <div class="metric-card planejada">
+            <div class="value" id="totalPlanejada">0</div>
+            <div class="label">Planejadas</div>
+        </div>
+        <div class="metric-card andamento">
+            <div class="value" id="totalAndamento">0</div>
+            <div class="label">Em Andamento</div>
+        </div>
+        <div class="metric-card concluida">
+            <div class="value" id="totalConcluida">0</div>
+            <div class="label">Concluídas</div>
+        </div>
+        <div class="metric-card atrasada">
+            <div class="value" id="totalAtrasada">0</div>
+            <div class="label">Atrasadas</div>
+        </div>
+        <div class="metric-card pts">
+            <div class="value" id="totalPTsGeral">0</div>
+            <div class="label">Total de PTs</div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab active" onclick="mostrarTab('lista')">📋 Lista de SS</button>
+        <button class="tab" onclick="mostrarTab('dashboard')">📊 Dashboard</button>
+        <button class="tab" onclick="mostrarTab('dashboardPT')">👥 Equipe</button>
+        <button class="tab" onclick="mostrarTab('usuarios')">👤 Usuários</button>
+    </div>
+
+    <!-- TAB LISTA -->
+    <div id="tab-lista" class="tab-content active">
+        <div class="toolbar">
+            <div class="search-group">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar por SS, Local ou Descrição...">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">Buscar</button>
+            </div>
+            <div class="filter-group">
+                <select id="statusFilter" onchange="aplicarFiltros()">
+                    <option value="todos">Todos os status</option>
+                    <option value="Planejada">Planejada</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Concluída">Concluída</option>
+                    <option value="Atrasada">Atrasada</option>
+                </select>
+                <input type="month" id="mesFilter" onchange="aplicarFiltros()" placeholder="Mês">
+                <button class="btn btn-success" onclick="exportarParaExcel()">📎 Exportar</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th style="width:30px"></th><th>N° SS</th><th>Local</th><th>Descrição</th><th>Status</th><th>Requisitante</th><th>Data</th><th>PTs</th><th>Ações</th></tr>
+                </thead>
+                <tbody id="tabelaSS"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB DASHBOARD SS -->
+    <div id="tab-dashboard" class="tab-content">
+        <div class="dashboard-grid">
+            <div class="analytics-card">
+                <h3>📊 Status das Solicitações</h3>
+                <canvas id="statusChart" style="max-height: 250px;"></canvas>
+            </div>
+            <div class="analytics-card">
+                <h3>📈 Evolução Mensal</h3>
+                <canvas id="mensalChart" style="max-height: 250px;"></canvas>
+            </div>
+            <div class="analytics-card">
+                <h3>🎯 Taxa de Conclusão</h3>
+                <div class="kpi-large">
+                    <div class="number" id="taxaConclusao">0%</div>
+                    <div class="label">das solicitações concluídas</div>
+                </div>
+                <div class="kpi-large">
+                    <div class="number" id="taxaAtraso">0%</div>
+                    <div class="label">de solicitações atrasadas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB DASHBOARD EQUIPE (Supervisores e Encarregados) -->
+    <div id="tab-dashboardPT" class="tab-content">
+        <div class="dashboard-grid">
+            <div class="analytics-card">
+                <h3>👔 Ranking - Supervisores</h3>
+                <div class="ranking-list" id="rankingSupervisores"></div>
+            </div>
+            <div class="analytics-card">
+                <h3>🔧 Ranking - Encarregados</h3>
+                <div class="ranking-list" id="rankingEncarregados"></div>
+            </div>
+        </div>
+        <div class="dashboard-grid">
+            <div class="analytics-card">
+                <h3>📌 Status das PTs</h3>
+                <canvas id="ptStatusChart" style="max-height: 220px;"></canvas>
+            </div>
+            <div class="analytics-card">
+                <h3>📊 PTs por Status</h3>
+                <div id="ptStatusResumo" style="display: flex; justify-content: space-around; text-align: center; padding: 15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB USUÁRIOS -->
+    <div id="tab-usuarios" class="tab-content">
+        <div class="analytics-card">
+            <h3>👥 Usuários do Sistema</h3>
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="novoUsuario" placeholder="Nome do novo usuário" style="padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 12px; width: 250px;">
+                <button class="btn btn-success" onclick="abrirModalCadastrarUsuario()" style="margin-left: 10px;">+ Adicionar</button>
+            </div>
+            <div id="listaUsuarios"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR PT -->
+<div id="modalEditarPT" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2>✏️ Editar PT</h2><span class="close-modal" onclick="fecharModalEditarPT()">&times;</span></div>
+        <form id="formEditarPT" onsubmit="salvarEdicaoPT(event)">
+            <input type="hidden" id="editNumSS"><input type="hidden" id="editNumPTOriginal">
+            <div class="form-row">
+                <div class="form-group"><label>N° PT</label><input type="text" id="editNumPT" required></div>
+                <div class="form-group"><label>Local</label><input type="text" id="editLocalPT" required></div>
+                <div class="form-group"><label>Data</label><input type="date" id="editDataPT" required></div>
+            </div>
+            <div class="form-group"><label>Descrição</label><textarea id="editDescricaoPT" rows="2" required></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label>Supervisor</label><select id="editSupervisorPT"><option>Jaime Ferreira de Freitas</option><option>José Carlos de Aguiar</option></select></div>
+                <div class="form-group"><label>Encarregado</label><select id="editEncarregadoPT"><option>Adilson Costa Santos</option><option>Anderson Almeida dos Santos</option><option>Douglas Rodrigues dos Santos</option><option>Francisco Rodrigues Coelho</option><option>José Edson da Silva</option><option>Reginaldo Mauricio Fernandes</option><option>Romildo de Castro Santos</option><option>Silvio primo Gonçalves</option></select></div>
+                <div class="form-group"><label>Status</label><select id="editStatusPT"><option>Em andamento</option><option>Concluído</option><option>Cancelado</option><option>Planejado</option></select></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn" onclick="fecharModalEditarPT()">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL GERENCIAR PTs -->
+<div id="modalPTs" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2 id="modalPTsTitle">Gerenciar PTs</h2><span class="close-modal" onclick="fecharModalPTs()">&times;</span></div>
+        <div id="ssInfoPTs" style="background: #f1f5f9; padding: 12px; border-radius: 12px; margin-bottom: 15px;"></div>
+        <h4>📌 PTs Vinculadas</h4><div id="ptsVinculadas" style="margin-bottom: 20px;"></div>
+        <h4>➕ Adicionar PT</h4>
+        <form id="formAdicionarPT" onsubmit="adicionarPTManual(event)">
+            <div class="form-row">
+                <div class="form-group"><label>N° PT</label><input type="text" id="novoNumPT" required></div>
+                <div class="form-group"><label>Local</label><input type="text" id="novoLocalPT" required></div>
+                <div class="form-group"><label>Data</label><input type="date" id="novaDataPT" required></div>
+            </div>
+            <div class="form-group"><label>Descrição</label><textarea id="novaDescricaoPT" rows="2" required></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label>Supervisor</label><select id="novoSupervisorPT"><option>Jaime Ferreira de Freitas</option><option>José Carlos de Aguiar</option></select></div>
+                <div class="form-group"><label>Encarregado</label><select id="novoEncarregadoPT"><option>Adilson Costa Santos</option><option>Anderson Almeida dos Santos</option><option>Douglas Rodrigues dos Santos</option><option>Francisco Rodrigues Coelho</option><option>José Edson da Silva</option><option>Reginaldo Mauricio Fernandes</option><option>Romildo de Castro Santos</option><option>Silvio primo Gonçalves</option></select></div>
+                <div class="form-group"><label>Status</label><select id="novoStatusPT"><option>Em andamento</option><option>Concluído</option><option>Cancelado</option><option>Planejado</option></select></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn" onclick="fecharModalPTs()">Fechar</button><button type="submit" class="btn btn-success">Adicionar</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL SENHA -->
+<div id="modalSenha" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2 id="modalSenhaTitle">Alterar Senha</h2><span class="close-modal" onclick="fecharModalSenha()">&times;</span></div>
+        <form id="formSenha" onsubmit="salvarNovaSenha(event)">
+            <input type="hidden" id="senhaUsuarioId">
+            <div class="form-group"><label>Nova Senha (8-12 caracteres, maiúscula, minúscula, número e caractere especial)</label><input type="password" id="novaSenha" onkeyup="validarSenhaCompleta()"></div>
+            <div class="form-group"><label>Confirmar Senha</label><input type="password" id="confirmarSenha" onkeyup="validarSenhaCompleta()"></div>
+            <div class="modal-footer"><button type="button" class="btn" onclick="fecharModalSenha()">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const ID_PLANILHA = "1nkeGxmtSjeEY5pBZiCfAUROcy-zkO-pSaXhgDIhGJnM";
+    const URL_API = `https://docs.google.com/spreadsheets/d/${ID_PLANILHA}/gviz/tq?tqx=out:json`;
+    
+    let usuarios = [], usuarioAtual = null, dadosPlanilha = [], ssAtual = null;
+    let ptsPorSS = JSON.parse(localStorage.getItem('pts_por_ss') || '{}');
+    let expandedRows = JSON.parse(localStorage.getItem('expanded_rows_ss') || '{}');
+    let chartStatus = null, chartMensal = null, chartPTStatus = null;
+
+    function corrigirData(valor) {
+        if (!valor) return '';
+        if (typeof valor === 'number' && valor > 40000 && valor < 50000) {
+            const dataBase = new Date(1899, 11, 30);
+            return new Date(dataBase.getTime() + (valor * 86400000)).toISOString().split('T')[0];
+        }
+        if (typeof valor === 'string' && valor.includes('/')) {
+            const partes = valor.split('/');
+            if (partes.length === 3) return `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`;
+        }
+        if (typeof valor === 'string' && valor.includes('-')) return valor.split('T')[0];
+        return valor;
+    }
+
+    async function carregarDados() {
+        try {
+            const response = await fetch(URL_API);
+            const text = await response.text();
+            const jsonText = text.substring(47, text.length - 2);
+            const data = JSON.parse(jsonText);
+            const colunas = data.table.cols.map(col => col.label);
+            const linhas = data.table.rows.map(row => row.c.map(cell => cell ? cell.v : ""));
+            
+            dadosPlanilha = linhas.slice(1).map(linha => {
+                const obj = {};
+                colunas.forEach((col, idx) => { obj[col] = linha[idx]; });
+                return obj;
+            }).filter(s => s["N° SS"] || s["Nº SS"]);
+            
+            if (dadosPlanilha.length === 0 && linhas.length > 1) {
+                dadosPlanilha = linhas.slice(1).map(linha => ({
+                    "N° SS": linha[0], "Local": linha[1], "Descrição": linha[2],
+                    "Status": linha[3], "Requisitante": linha[4], "Data": corrigirData(linha[5])
+                }));
+            }
+            
+            dadosPlanilha.forEach(ss => { if (ss["Data"]) ss["Data"] = corrigirData(ss["Data"]); });
+            aplicarFiltros();
+            atualizarDashboard();
+            atualizarDashboardPTs();
+        } catch (error) {
+            console.error("Erro:", error);
+            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha.</td></tr>';
+        }
+    }
+
+    function aplicarFiltros() {
+        const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        const statusFilter = document.getElementById('statusFilter')?.value || 'todos';
+        const mesFilter = document.getElementById('mesFilter')?.value || '';
+        
+        let filtradas = dadosPlanilha.filter(s => {
+            const numSS = s["N° SS"] || s["Nº SS"] || '';
+            const matchSearch = String(numSS).toLowerCase().includes(search) ||
+                               (s["Local"] || "").toLowerCase().includes(search) ||
+                               (s["Descrição"] || "").toLowerCase().includes(search);
+            const matchStatus = statusFilter === 'todos' || (s["Status"] || "") === statusFilter;
+            let matchMes = true;
+            if (mesFilter && s["Data"]) matchMes = s["Data"].substring(0, 7) === mesFilter;
+            return matchSearch && matchStatus && matchMes;
+        });
+        
+        atualizarTabela(filtradas);
+        atualizarCards(filtradas);
+    }
+
+    function atualizarCards(filtradas) {
+        const total = filtradas.length;
+        const planejada = filtradas.filter(s => s["Status"] === "Planejada").length;
+        const andamento = filtradas.filter(s => s["Status"] === "Em andamento").length;
+        const concluida = filtradas.filter(s => s["Status"] === "Concluída").length;
+        const atrasada = filtradas.filter(s => s["Status"] === "Atrasada").length;
+        
+        document.getElementById('totalSS').textContent = total;
+        document.getElementById('totalPlanejada').textContent = planejada;
+        document.getElementById('totalAndamento').textContent = andamento;
+        document.getElementById('totalConcluida').textContent = concluida;
+        document.getElementById('totalAtrasada').textContent = atrasada;
+        
+        let todasPTs = [];
+        for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
+        document.getElementById('totalPTsGeral').textContent = todasPTs.length;
+    }
+
+    function atualizarTabela(filtradas) {
+        const tbody = document.getElementById('tabelaSS');
+        if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada</td></tr>'; return; }
+        
+        let html = '';
+        filtradas.forEach(s => {
+            const numSS = s["N° SS"] || s["Nº SS"];
+            const pts = ptsPorSS[numSS] || [];
+            const isExpanded = expandedRows[numSS] === true;
+            const expandIcon = pts.length > 0 ? `<span class="expand-icon" onclick="toggleExpand('${numSS}')">${isExpanded ? '▼' : '▶'}</span>` : '•';
+            
+            let statusClass = "status-planejada";
+            if (s["Status"] === "Em andamento") statusClass = "status-andamento";
+            else if (s["Status"] === "Concluída") statusClass = "status-concluida";
+            else if (s["Status"] === "Atrasada") statusClass = "status-atrasada";
+            
+            const ssJson = JSON.stringify(s).replace(/"/g, '&quot;');
+            
+            html += `<tr>
+                <td style="text-align:center">${expandIcon}</td>
+                <td><strong>${numSS || '-'}</strong></td>
+                <td>${s["Local"] || '-'}</td>
+                <td>${(s["Descrição"] || '').substring(0, 45)}</td>
+                <td><span class="status-badge ${statusClass}">${s["Status"] || '-'}</span></td>
+                <td>${s["Requisitante"] || '-'}</td>
+                <td>${s["Data"] || '-'}</td>
+                <td><span class="badge-pt">${pts.length} PT(s)</span></td>
+                <td><button class="btn btn-warning btn-sm" onclick='abrirModalPTs(${ssJson})'>📋 PTs</button></td>
+            </tr>`;
+            
+            if (isExpanded && pts.length > 0) {
+                pts.forEach(pt => {
+                    html += `<tr class="pt-row">
+                        <td class="pt-indent"></td>
+                        <td colspan="8" class="pt-card-info">
+                            <span><strong>📄 PT ${pt.numPT}</strong></span>
+                            <span class="pt-tag">📍 ${pt.local || '-'}</span>
+                            <span class="pt-tag">📅 ${pt.data || '-'}</span>
+                            <span class="pt-tag">${pt.status || 'Em andamento'}</span>
+                            <span class="pt-tag">👔 ${pt.supervisor || '-'}</span>
+                            <span class="pt-tag">🔧 ${pt.encarregado || '-'}</span>
+                            <button class="btn btn-info btn-sm" onclick='abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})'>✏️</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+        });
+        tbody.innerHTML = html;
+    }
+
+    function atualizarDashboard() {
+        const total = dadosPlanilha.length;
+        const concluidas = dadosPlanilha.filter(s => s["Status"] === "Concluída").length;
+        const atrasadas = dadosPlanilha.filter(s => s["Status"] === "Atrasada").length;
+        document.getElementById('taxaConclusao').textContent = total > 0 ? Math.round((concluidas / total) * 100) + "%" : "0%";
+        document.getElementById('taxaAtraso').textContent = total > 0 ? Math.round((atrasadas / total) * 100) + "%" : "0%";
+        
+        const statusCount = {
+            Planejada: dadosPlanilha.filter(s => s["Status"] === "Planejada").length,
+            'Em andamento': dadosPlanilha.filter(s => s["Status"] === "Em andamento").length,
+            Concluída: concluidas,
+            Atrasada: atrasadas
+        };
+        
+        const ctxStatus = document.getElementById('statusChart')?.getContext('2d');
+        if (ctxStatus) {
+            if (chartStatus) chartStatus.destroy();
+            chartStatus = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#f59e0b', '#2c6e9e', '#10b981', '#ef4444'] }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+        
+        const mensalData = {};
+        dadosPlanilha.forEach(s => { if (s["Data"]) { const mes = s["Data"].substring(0, 7); mensalData[mes] = (mensalData[mes] || 0) + 1; } });
+        const mesesOrdenados = Object.keys(mensalData).sort();
+        const ctxMensal = document.getElementById('mensalChart')?.getContext('2d');
+        if (ctxMensal) {
+            if (chartMensal) chartMensal.destroy();
+            chartMensal = new Chart(ctxMensal, {
+                type: 'line',
+                data: { labels: mesesOrdenados, datasets: [{ label: 'SS por Mês', data: mesesOrdenados.map(m => mensalData[m]), borderColor: '#2c6e9e', backgroundColor: 'rgba(44,110,158,0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: true }
+            });
+        }
+    }
+
+    function atualizarDashboardPTs() {
+        let todasPTs = [];
+        for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
+        
+        const supervisorCount = {};
+        todasPTs.forEach(p => { if (p.supervisor && p.supervisor !== '-') supervisorCount[p.supervisor] = (supervisorCount[p.supervisor] || 0) + 1; });
+        const rankingSup = Object.entries(supervisorCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        document.getElementById('rankingSupervisores').innerHTML = rankingSup.map(([nome, qtd]) => `<div class="ranking-item"><span class="ranking-name">${nome}</span><span class="ranking-count">${qtd} PTs</span></div>`).join('') || '<div style="text-align:center; padding:20px;">Nenhum dado disponível</div>';
+        
+        const encarregadoCount = {};
+        todasPTs.forEach(p => { if (p.encarregado && p.encarregado !== '-') encarregadoCount[p.encarregado] = (encarregadoCount[p.encarregado] || 0) + 1; });
+        const rankingEnc = Object.entries(encarregadoCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        document.getElementById('rankingEncarregados').innerHTML = rankingEnc.map(([nome, qtd]) => `<div class="ranking-item"><span class="ranking-name">${nome}</span><span class="ranking-count">${qtd} PTs</span></div>`).join('') || '<div style="text-align:center; padding:20px;">Nenhum dado disponível</div>';
+        
+        const ptStatusCount = {};
+        todasPTs.forEach(p => { ptStatusCount[p.status || 'Em andamento'] = (ptStatusCount[p.status || 'Em andamento'] || 0) + 1; });
+        const ctxPTStatus = document.getElementById('ptStatusChart')?.getContext('2d');
+        if (ctxPTStatus) {
+            if (chartPTStatus) chartPTStatus.destroy();
+            chartPTStatus = new Chart(ctxPTStatus, {
+                type: 'pie',
+                data: { labels: Object.keys(ptStatusCount), datasets: [{ data: Object.values(ptStatusCount), backgroundColor: ['#2c6e9e', '#10b981', '#ef4444', '#f59e0b'] }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+        
+        const resumoDiv = document.getElementById('ptStatusResumo');
+        if (resumoDiv) {
+            resumoDiv.innerHTML = Object.entries(ptStatusCount).map(([status, qtd]) => `<div><div style="font-size:1.8rem; font-weight:700; color:#2c6e9e;">${qtd}</div><div style="font-size:0.7rem; color:#64748b;">${status}</div></div>`).join('');
+        }
+    }
+
+    function getPTsPorSS(numSS) { return ptsPorSS[numSS] || []; }
+    function salvarPTsPorSS(numSS, pts) { ptsPorSS[numSS] = pts; localStorage.setItem('pts_por_ss', JSON.stringify(ptsPorSS)); carregarDados(); }
+    function adicionarPT(numSS, pt) { const pts = getPTsPorSS(numSS); if (!pts.find(p => p.numPT === pt.numPT)) { pts.push(pt); salvarPTsPorSS(numSS, pts); expandedRows[numSS] = true; localStorage.setItem('expanded_rows_ss', JSON.stringify(expandedRows)); } }
+    function removerPT(numSS, numPT) { if (confirm(`Remover PT ${numPT}?`)) { let pts = getPTsPorSS(numSS); pts = pts.filter(p => p.numPT !== numPT); salvarPTsPorSS(numSS, pts); if (ssAtual) carregarModalPTs(ssAtual); } }
+    function toggleExpand(numSS) { if (expandedRows[numSS]) delete expandedRows[numSS]; else expandedRows[numSS] = true; localStorage.setItem('expanded_rows_ss', JSON.stringify(expandedRows)); aplicarFiltros(); }
+    
+    function abrirModalPTs(ss) { ssAtual = ss; const numSS = ss["N° SS"] || ss["Nº SS"]; document.getElementById('modalPTsTitle').textContent = `PTs - SS ${numSS}`; document.getElementById('ssInfoPTs').innerHTML = `<strong>Local:</strong> ${ss["Local"] || '-'} | <strong>Status:</strong> ${ss["Status"] || '-'}`; document.getElementById('novaDataPT').value = new Date().toISOString().split('T')[0]; carregarModalPTs(ss); document.getElementById('modalPTs').style.display = 'flex'; }
+    
+    function carregarModalPTs(ss) { const numSS = ss["N° SS"] || ss["Nº SS"]; const pts = getPTsPorSS(numSS); const container = document.getElementById('ptsVinculadas'); if (pts.length === 0) { container.innerHTML = '<p style="padding:20px; text-align:center;">Nenhuma PT vinculada.</p>'; return; } container.innerHTML = pts.map(pt => `<div class="pt-item"><div><strong>PT ${pt.numPT}</strong><br><span class="pt-tag">${pt.local}</span> <span class="pt-tag">${pt.status}</span><br><span style="font-size:0.75rem;">👔 ${pt.supervisor} | 🔧 ${pt.encarregado}</span></div><div><button class="btn btn-info btn-sm" onclick='abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="removerPT('${numSS}', '${pt.numPT}')">🗑️</button></div></div>`).join(''); }
+    
+    function adicionarPTManual(event) { event.preventDefault(); const numSS = ssAtual["N° SS"] || ssAtual["Nº SS"]; const numPT = document.getElementById('novoNumPT').value.trim(); if (!numPT) return alert('Informe o N° da PT!'); if (getPTsPorSS(numSS).find(p => p.numPT === numPT)) return alert(`PT ${numPT} já existe!`); const novaPT = { numPT, local: document.getElementById('novoLocalPT').value, descricao: document.getElementById('novaDescricaoPT').value, supervisor: document.getElementById('novoSupervisorPT').value, encarregado: document.getElementById('novoEncarregadoPT').value, data: document.getElementById('novaDataPT').value, status: document.getElementById('novoStatusPT').value }; adicionarPT(numSS, novaPT); document.getElementById('formAdicionarPT').reset(); document.getElementById('novaDataPT').value = new Date().toISOString().split('T')[0]; carregarModalPTs(ssAtual); alert(`PT ${numPT} adicionada!`); }
+    
+    function abrirModalEditarPT(numSS, pt) { document.getElementById('editNumSS').value = numSS; document.getElementById('editNumPTOriginal').value = pt.numPT; document.getElementById('editNumPT').value = pt.numPT; document.getElementById('editLocalPT').value = pt.local || ''; document.getElementById('editDataPT').value = pt.data || ''; document.getElementById('editDescricaoPT').value = pt.descricao || ''; document.getElementById('editSupervisorPT').value = pt.supervisor || ''; document.getElementById('editEncarregadoPT').value = pt.encarregado || ''; document.getElementById('editStatusPT').value = pt.status || 'Em andamento'; document.getElementById('modalEditarPT').style.display = 'flex'; }
+    
+    function salvarEdicaoPT(event) { event.preventDefault(); const numSS = document.getElementById('editNumSS').value; const numPTOriginal = document.getElementById('editNumPTOriginal').value; let pts = getPTsPorSS(numSS); const index = pts.findIndex(p => p.numPT === numPTOriginal); if (index !== -1) { pts[index] = { numPT: document.getElementById('editNumPT').value, local: document.getElementById('editLocalPT').value, data: document.getElementById('editDataPT').value, descricao: document.getElementById('editDescricaoPT').value, supervisor: document.getElementById('editSupervisorPT').value, encarregado: document.getElementById('editEncarregadoPT').value, status: document.getElementById('editStatusPT').value }; salvarPTsPorSS(numSS, pts); alert('PT atualizada!'); fecharModalEditarPT(); if (ssAtual) carregarModalPTs(ssAtual); } }
+    
+    function fecharModalEditarPT() { document.getElementById('modalEditarPT').style.display = 'none'; }
+    function fecharModalPTs() { document.getElementById('modalPTs').style.display = 'none'; ssAtual = null; }
+    
+    function exportarParaExcel() {
+        let csv = [["N° SS","Local","Descrição","Status","Requisitante","Data","PT N°","PT Local","PT Supervisor","PT Encarregado","PT Status","PT Data"]];
+        dadosPlanilha.forEach(ss => {
+            const numSS = ss["N° SS"] || ss["Nº SS"];
+            const pts = getPTsPorSS(numSS);
+            if (pts.length === 0) csv.push([numSS, ss["Local"], ss["Descrição"], ss["Status"], ss["Requisitante"], ss["Data"], "","","","","",""]);
+            else pts.forEach(pt => csv.push([numSS, ss["Local"], ss["Descrição"], ss["Status"], ss["Requisitante"], ss["Data"], pt.numPT, pt.local, pt.supervisor, pt.encarregado, pt.status, pt.data]));
+        });
+        const ws = XLSX.utils.aoa_to_sheet(csv);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'SS_e_PTs');
+        XLSX.writeFile(wb, `relatorio_ss_pts_${new Date().toISOString().slice(0,10)}.xlsx`);
+        alert('Relatório exportado!');
+    }
+    
+    // LOGIN
+    function handleLoginEnter(event) { if (event.key === 'Enter') fazerLogin(); }
+    function carregarUsuarios() { const saved = localStorage.getItem('sistema_usuarios_ss'); if (saved) usuarios = JSON.parse(saved); else { usuarios = [{ id: 1, usuario: "admin", senha: "Admin@123", nivel: "admin", nome: "Administrador" }]; salvarUsuarios(); } }
+    function salvarUsuarios() { localStorage.setItem('sistema_usuarios_ss', JSON.stringify(usuarios)); }
+    function fazerLogin() { const usuario = document.getElementById('loginUsuario').value.trim(); const senha = document.getElementById('loginSenha').value; const user = usuarios.find(u => u.usuario === usuario && u.senha === senha); if (user) { usuarioAtual = user; localStorage.setItem('usuario_logado_ss', JSON.stringify(user)); document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainContent').style.display = 'block'; document.getElementById('nomeUsuario').innerHTML = '👤 ' + (user.nome || user.usuario); if (user.nivel === 'admin') carregarListaUsuarios(); carregarDados(); } else document.getElementById('loginError').innerHTML = 'Usuário ou senha inválidos!'; }
+    function fazerLogout() { localStorage.removeItem('usuario_logado_ss'); location.reload(); }
+    function validarSenhaCompleta() { const senha = document.getElementById('novaSenha')?.value || ''; const confirmar = document.getElementById('confirmarSenha')?.value || ''; return /[A-Z]/.test(senha) && /[a-z]/.test(senha) && /[0-9]/.test(senha) && /[@$!%*#?&]/.test(senha) && senha.length >= 8 && senha.length <= 12 && senha === confirmar; }
+    function abrirModalPrimeiroAcesso() { document.getElementById('modalSenhaTitle').textContent = 'Primeiro Acesso'; document.getElementById('senhaUsuarioId').value = ''; document.getElementById('modalSenha').style.display = 'flex'; if (!document.getElementById('nomePrimeiroAcesso')) { const divNome = document.createElement('div'); divNome.className = 'form-group'; divNome.id = 'nomePrimeiroAcessoGroup'; divNome.innerHTML = '<label>Seu Nome</label><input type="text" id="nomePrimeiroAcesso" required>'; document.getElementById('formSenha').insertBefore(divNome, document.getElementById('formSenha').firstChild); } }
+    function abrirModalTrocarSenha() { document.getElementById('modalSenhaTitle').textContent = 'Alterar Senha'; document.getElementById('senhaUsuarioId').value = usuarioAtual.id; document.getElementById('modalSenha').style.display = 'flex'; const nomeDiv = document.getElementById('nomePrimeiroAcessoGroup'); if (nomeDiv) nomeDiv.style.display = 'none'; }
+    function abrirModalCadastrarUsuario() { if (usuarioAtual.nivel !== 'admin') return alert('Apenas administradores!'); document.getElementById('modalSenhaTitle').textContent = 'Cadastrar Usuário'; document.getElementById('senhaUsuarioId').value = ''; document.getElementById('modalSenha').style.display = 'flex'; let nomeDiv = document.getElementById('nomePrimeiroAcessoGroup'); if (!nomeDiv) { const divNome = document.createElement('div'); divNome.className = 'form-group'; divNome.id = 'nomePrimeiroAcessoGroup'; divNome.innerHTML = '<label>Nome do Usuário</label><input type="text" id="nomePrimeiroAcesso" required>'; document.getElementById('formSenha').insertBefore(divNome, document.getElementById('formSenha').firstChild); } else nomeDiv.style.display = 'block'; }
+    function salvarNovaSenha(event) { event.preventDefault(); if (!validarSenhaCompleta()) return alert('Senha inválida!'); const novaSenha = document.getElementById('novaSenha').value; const usuarioId = document.getElementById('senhaUsuarioId').value; const nomePrimeiro = document.getElementById('nomePrimeiroAcesso')?.value; if (!usuarioId && !nomePrimeiro) return alert('Preencha o nome!'); if (!usuarioId) { const novoUsuario = nomePrimeiro.toLowerCase().replace(/\s/g, '.'); if (usuarios.find(u => u.usuario === novoUsuario)) return alert('Usuário já existe!'); usuarios.push({ id: usuarios.length + 1, usuario: novoUsuario, senha: novaSenha, nivel: "user", nome: nomePrimeiro }); alert('Usuário cadastrado!'); } else { const user = usuarios.find(u => u.id == usuarioId); if (user) { user.senha = novaSenha; alert('Senha alterada!'); if (usuarioAtual?.id == usuarioId) { usuarioAtual.senha = novaSenha; localStorage.setItem('usuario_logado_ss', JSON.stringify(usuarioAtual)); } } } salvarUsuarios(); fecharModalSenha(); if (usuarioAtual?.nivel === 'admin') carregarListaUsuarios(); const nomeDiv = document.getElementById('nomePrimeiroAcessoGroup'); if (nomeDiv) nomeDiv.remove(); }
+    function fecharModalSenha() { document.getElementById('modalSenha').style.display = 'none'; const nomeDiv = document.getElementById('nomePrimeiroAcessoGroup'); if (nomeDiv) nomeDiv.remove(); }
+    function carregarListaUsuarios() { const listaDiv = document.getElementById('listaUsuarios'); if (!listaDiv) return; listaDiv.innerHTML = `<table style="width:100%"><thead><tr><th>Usuário</th><th>Nome</th><th>Nível</th><th>Ações</th></tr></thead><tbody>${usuarios.map(u => `<tr><td>${u.usuario}</td><td>${u.nome || u.usuario}</td><td>${u.nivel === 'admin' ? 'Admin' : 'Usuário'}</td><td><button class="btn btn-primary btn-sm" onclick="abrirModalResetarSenha(${u.id})">Resetar</button>${u.usuario !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id})">Excluir</button>` : ''}</td></tr>`).join('')}</tbody></table>`; }
+    function abrirModalResetarSenha(id) { const user = usuarios.find(u => u.id === id); if (user) { document.getElementById('modalSenhaTitle').textContent = `Resetar - ${user.usuario}`; document.getElementById('senhaUsuarioId').value = id; document.getElementById('modalSenha').style.display = 'flex'; const nomeDiv = document.getElementById('nomePrimeiroAcessoGroup'); if (nomeDiv) nomeDiv.style.display = 'none'; } }
+    function excluirUsuario(id) { if (usuarioAtual.nivel !== 'admin') return alert('Apenas admin!'); const user = usuarios.find(u => u.id === id); if (user?.usuario === 'admin') return alert('Não pode excluir admin!'); if (confirm(`Excluir ${user?.usuario}?`)) { usuarios = usuarios.filter(u => u.id !== id); salvarUsuarios(); carregarListaUsuarios(); } }
+    function mostrarTab(tab) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); const tabs = { lista: [0, 'tab-lista'], dashboard: [1, 'tab-dashboard'], dashboardPT: [2, 'tab-dashboardPT'], usuarios: [3, 'tab-usuarios'] }; if (tabs[tab]) { document.querySelectorAll('.tab')[tabs[tab][0]].classList.add('active'); document.getElementById(tabs[tab][1]).classList.add('active'); if (tab === 'dashboardPT') atualizarDashboardPTs(); if (tab === 'dashboard') atualizarDashboard(); if (tab === 'usuarios') carregarListaUsuarios(); } }
+    
+    document.getElementById('searchInput')?.addEventListener('keyup', () => aplicarFiltros());
+    window.onclick = (e) => { if (e.target === document.getElementById('modalSenha')) fecharModalSenha(); if (e.target === document.getElementById('modalPTs')) fecharModalPTs(); if (e.target === document.getElementById('modalEditarPT')) fecharModalEditarPT(); };
+    
+    carregarUsuarios();
+    const saved = localStorage.getItem('usuario_logado_ss');
+    if (saved) { usuarioAtual = JSON.parse(saved); if (usuarios.find(u => u.id === usuarioAtual.id)) { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainContent').style.display = 'block'; document.getElementById('nomeUsuario').innerHTML = '👤 ' + (usuarioAtual.nome || usuarioAtual.usuario); if (usuarioAtual.nivel === 'admin') carregarListaUsuarios(); carregarDados(); } else fazerLogout(); }
+</script>
+</body>
+</html>
