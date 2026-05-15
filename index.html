@@ -701,96 +701,55 @@
     let ptsPorSS = JSON.parse(localStorage.getItem('pts_por_ss') || '{}');
     let expandedRows = JSON.parse(localStorage.getItem('expanded_rows_ss') || '{}');
 
-    // Função CORRIGIDA para converter data do formato DATE(ano,mes,dia) para DD/MM/AAAA
-    function converterDataParaBrasileiro(valor) {
+    // Função SIMPLES: só reorganiza DATE(ano,mes,dia) para dia/mes/ano
+    function converterDataSimples(valor) {
         if (!valor) return '';
-        
-        // Converte para string e verifica se é DATE(ano,mes,dia)
-        let valorStr = String(valor);
-        
-        if (valorStr.includes('DATE(')) {
-            // Remove "DATE(" e ")"
-            let numeros = valorStr.replace('DATE(', '').replace(')', '');
-            // Separa os números: ano, mes, dia
-            let partes = numeros.split(',');
-            
+        let str = String(valor);
+        if (str.indexOf('DATE(') === 0) {
+            let conteudo = str.substring(5, str.length - 1);
+            let partes = conteudo.split(',');
             let ano = partes[0].trim();
             let mes = partes[1].trim();
             let dia = partes[2].trim();
-            
-            // Formata como dd/mm/aaaa
-            let diaFormatado = dia.padStart(2, '0');
-            let mesFormatado = mes.padStart(2, '0');
-            
-            return `${diaFormatado}/${mesFormatado}/${ano}`;
+            return dia.padStart(2, '0') + '/' + mes.padStart(2, '0') + '/' + ano;
         }
-        
-        // Se já estiver no formato DD/MM/AAAA
-        if (typeof valor === 'string' && valor.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-            return valor;
-        }
-        
-        // Se for ISO (YYYY-MM-DD)
-        if (typeof valor === 'string' && valor.includes('-')) {
-            const partes = valor.split('T')[0].split('-');
-            if (partes.length === 3) {
-                return `${partes[2]}/${partes[1]}/${partes[0]}`;
-            }
-        }
-        
-        return valor;
+        return str;
     }
 
- async function carregarDados() {
-    try {
-        const response = await fetch(URL_API);
-        const text = await response.text();
-        const jsonText = text.substring(47, text.length - 2);
-        const data = JSON.parse(jsonText);
-        const colunas = data.table.cols.map(col => col.label);
-        const linhas = data.table.rows.map(row => row.c.map(cell => cell ? cell.v : ""));
-        
-        dadosPlanilha = [];
-        
-        for (let i = 1; i < linhas.length; i++) {
-            const linha = linhas[i];
-            let dataOriginal = linha[5]; // Coluna da data (índice 5)
-            let dataFormatada = dataOriginal;
+    async function carregarDados() {
+        try {
+            const response = await fetch(URL_API);
+            const text = await response.text();
+            const jsonText = text.substring(47, text.length - 2);
+            const data = JSON.parse(jsonText);
+            const linhas = data.table.rows.map(row => row.c.map(cell => cell ? cell.v : ""));
             
-            // Se for DATE(ano,mes,dia), converte para dia/mes/ano
-            if (dataOriginal && String(dataOriginal).indexOf('DATE(') === 0) {
-                let conteudo = String(dataOriginal).substring(5, String(dataOriginal).length - 1);
-                let partes = conteudo.split(',');
-                let ano = partes[0].trim();
-                let mes = partes[1].trim();
-                let dia = partes[2].trim();
-                // Formato DIA/MES/ANO (exatamente como está na planilha)
-                dataFormatada = dia.padStart(2, '0') + '/' + mes.padStart(2, '0') + '/' + ano;
+            dadosPlanilha = [];
+            for (let i = 1; i < linhas.length; i++) {
+                const linha = linhas[i];
+                dadosPlanilha.push({
+                    "N° SS": linha[0],
+                    "Local": linha[1],
+                    "Descrição": linha[2],
+                    "Status": linha[3],
+                    "Requisitante": linha[4],
+                    "Data": converterDataSimples(linha[5])
+                });
             }
             
-            dadosPlanilha.push({
-                "N° SS": linha[0],
-                "Local": linha[1],
-                "Descrição": linha[2],
-                "Status": linha[3],
-                "Requisitante": linha[4],
-                "Data": dataFormatada
-            });
+            aplicarFiltros();
+        } catch (error) {
+            console.error("Erro:", error);
+            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. </td></tr>';
         }
-        
-        aplicarFiltros();
-    } catch (error) {
-        console.error("Erro:", error);
-        document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. 背部</tr>';
     }
-}
 
     function aplicarFiltros() {
         const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
         const statusFilter = document.getElementById('statusFilter')?.value || 'todos';
         
         let filtradas = dadosPlanilha.filter(s => {
-            const numSS = s["N° SS"] || s["Nº SS"] || '';
+            const numSS = s["N° SS"] || '';
             const matchSearch = String(numSS).toLowerCase().includes(search) ||
                                (s["Local"] || "").toLowerCase().includes(search) ||
                                (s["Descrição"] || "").toLowerCase().includes(search);
@@ -826,7 +785,7 @@
         
         let html = '';
         filtradas.forEach(s => {
-            const numSS = s["N° SS"] || s["Nº SS"];
+            const numSS = s["N° SS"];
             const pts = ptsPorSS[numSS] || [];
             const isExpanded = expandedRows[numSS] === true;
             const expandIcon = pts.length > 0 ? `<span class="expand-icon" onclick="toggleExpand('${numSS}')">${isExpanded ? '▼' : '▶'}</span>` : '•';
@@ -876,15 +835,15 @@
     function removerPT(numSS, numPT) { if (confirm(`Remover PT ${numPT}?`)) { let pts = getPTsPorSS(numSS); pts = pts.filter(p => p.numPT !== numPT); salvarPTsPorSS(numSS, pts); if (ssAtual) carregarModalPTs(ssAtual); } }
     function toggleExpand(numSS) { if (expandedRows[numSS]) delete expandedRows[numSS]; else expandedRows[numSS] = true; localStorage.setItem('expanded_rows_ss', JSON.stringify(expandedRows)); aplicarFiltros(); }
     
-    function abrirModalPTs(ss) { ssAtual = ss; const numSS = ss["N° SS"] || ss["Nº SS"]; document.getElementById('modalPTsTitle').textContent = `PTs - SS ${numSS}`; document.getElementById('ssInfoPTs').innerHTML = `<strong>Local:</strong> ${ss["Local"] || '-'} | <strong>Status:</strong> ${ss["Status"] || '-'}`; document.getElementById('novaDataPT').value = new Date().toISOString().split('T')[0]; carregarModalPTs(ss); document.getElementById('modalPTs').style.display = 'flex'; }
+    function abrirModalPTs(ss) { ssAtual = ss; const numSS = ss["N° SS"]; document.getElementById('modalPTsTitle').textContent = `PTs - SS ${numSS}`; document.getElementById('ssInfoPTs').innerHTML = `<strong>Local:</strong> ${ss["Local"] || '-'} | <strong>Status:</strong> ${ss["Status"] || '-'}`; document.getElementById('novaDataPT').value = new Date().toISOString().split('T')[0]; carregarModalPTs(ss); document.getElementById('modalPTs').style.display = 'flex'; }
     
-    function carregarModalPTs(ss) { const numSS = ss["N° SS"] || ss["Nº SS"]; const pts = getPTsPorSS(numSS); const container = document.getElementById('ptsVinculadas'); if (pts.length === 0) { container.innerHTML = '<p style="padding:20px; text-align:center;">Nenhuma PT vinculada.</p>'; return; } container.innerHTML = pts.map(pt => `<div class="pt-item"><div><strong>PT ${pt.numPT}</strong><br><span class="pt-tag">${pt.local}</span> <span class="pt-tag">${pt.status}</span><br><span style="font-size:0.75rem;">👔 ${pt.supervisor} | 🔧 ${pt.encarregado}</span></div><div><button class="btn btn-info btn-sm" onclick='abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="removerPT('${numSS}', '${pt.numPT}')">🗑️</button></div></div>`).join(''); }
+    function carregarModalPTs(ss) { const numSS = ss["N° SS"]; const pts = getPTsPorSS(numSS); const container = document.getElementById('ptsVinculadas'); if (pts.length === 0) { container.innerHTML = '<p style="padding:20px; text-align:center;">Nenhuma PT vinculada.</p>'; return; } container.innerHTML = pts.map(pt => `<div class="pt-item"><div><strong>PT ${pt.numPT}</strong><br><span class="pt-tag">${pt.local}</span> <span class="pt-tag">${pt.status}</span><br><span style="font-size:0.75rem;">👔 ${pt.supervisor} | 🔧 ${pt.encarregado}</span></div><div><button class="btn btn-info btn-sm" onclick='abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})'>✏️</button> <button class="btn btn-danger btn-sm" onclick="removerPT('${numSS}', '${pt.numPT}')">🗑️</button></div></div>`).join(''); }
     
-    function adicionarPTManual(event) { event.preventDefault(); const numSS = ssAtual["N° SS"] || ssAtual["Nº SS"]; const numPT = document.getElementById('novoNumPT').value.trim(); if (!numPT) return alert('Informe o N° da PT!'); if (getPTsPorSS(numSS).find(p => p.numPT === numPT)) return alert(`PT ${numPT} já existe!`); const novaPT = { numPT, local: document.getElementById('novoLocalPT').value, descricao: document.getElementById('novaDescricaoPT').value, supervisor: document.getElementById('novoSupervisorPT').value, encarregado: document.getElementById('novoEncarregadoPT').value, data: converterDataParaBrasileiro(document.getElementById('novaDataPT').value), status: document.getElementById('novoStatusPT').value }; adicionarPT(numSS, novaPT); document.getElementById('formAdicionarPT').reset(); document.getElementById('novaDataPT').value = new Date().toISOString().split('T')[0]; carregarModalPTs(ssAtual); alert(`PT ${numPT} adicionada!`); }
+    function adicionarPTManual(event) { event.preventDefault(); const numSS = ssAtual["N° SS"]; const numPT = document.getElementById('novoNumPT').value.trim(); if (!numPT) return alert('Informe o N° da PT!'); if (getPTsPorSS(numSS).find(p => p.numPT === numPT)) return alert(`PT ${numPT} já existe!`); const novaPT = { numPT, local: document.getElementById('novoLocalPT').value, descricao: document.getElementById('novaDescricaoPT').value, supervisor: document.getElementById('novoSupervisorPT').value, encarregado: document.getElementById('novoEncarregadoPT').value, data: document.getElementById('novaDataPT').value, status: document.getElementById('novoStatusPT').value }; adicionarPT(numSS, novaPT); document.getElementById('formAdicionarPT').reset(); document.getElementById('novaDataPT').value = new Date().toISOString().split('T')[0]; carregarModalPTs(ssAtual); alert(`PT ${numPT} adicionada!`); }
     
     function abrirModalEditarPT(numSS, pt) { document.getElementById('editNumSS').value = numSS; document.getElementById('editNumPTOriginal').value = pt.numPT; document.getElementById('editNumPT').value = pt.numPT; document.getElementById('editLocalPT').value = pt.local || ''; document.getElementById('editDataPT').value = pt.data || ''; document.getElementById('editDescricaoPT').value = pt.descricao || ''; document.getElementById('editSupervisorPT').value = pt.supervisor || ''; document.getElementById('editEncarregadoPT').value = pt.encarregado || ''; document.getElementById('editStatusPT').value = pt.status || 'Em andamento'; document.getElementById('modalEditarPT').style.display = 'flex'; }
     
-    function salvarEdicaoPT(event) { event.preventDefault(); const numSS = document.getElementById('editNumSS').value; const numPTOriginal = document.getElementById('editNumPTOriginal').value; let pts = getPTsPorSS(numSS); const index = pts.findIndex(p => p.numPT === numPTOriginal); if (index !== -1) { pts[index] = { numPT: document.getElementById('editNumPT').value, local: document.getElementById('editLocalPT').value, data: converterDataParaBrasileiro(document.getElementById('editDataPT').value), descricao: document.getElementById('editDescricaoPT').value, supervisor: document.getElementById('editSupervisorPT').value, encarregado: document.getElementById('editEncarregadoPT').value, status: document.getElementById('editStatusPT').value }; salvarPTsPorSS(numSS, pts); alert('PT atualizada!'); fecharModalEditarPT(); if (ssAtual) carregarModalPTs(ssAtual); } }
+    function salvarEdicaoPT(event) { event.preventDefault(); const numSS = document.getElementById('editNumSS').value; const numPTOriginal = document.getElementById('editNumPTOriginal').value; let pts = getPTsPorSS(numSS); const index = pts.findIndex(p => p.numPT === numPTOriginal); if (index !== -1) { pts[index] = { numPT: document.getElementById('editNumPT').value, local: document.getElementById('editLocalPT').value, data: document.getElementById('editDataPT').value, descricao: document.getElementById('editDescricaoPT').value, supervisor: document.getElementById('editSupervisorPT').value, encarregado: document.getElementById('editEncarregadoPT').value, status: document.getElementById('editStatusPT').value }; salvarPTsPorSS(numSS, pts); alert('PT atualizada!'); fecharModalEditarPT(); if (ssAtual) carregarModalPTs(ssAtual); } }
     
     function fecharModalEditarPT() { document.getElementById('modalEditarPT').style.display = 'none'; }
     function fecharModalPTs() { document.getElementById('modalPTs').style.display = 'none'; ssAtual = null; }
@@ -892,7 +851,7 @@
     function exportarParaExcel() {
         let csv = [["N° SS","Local","Descrição","Status","Requisitante","Data","PT N°","PT Local","PT Supervisor","PT Encarregado","PT Status","PT Data"]];
         dadosPlanilha.forEach(ss => {
-            const numSS = ss["N° SS"] || ss["Nº SS"];
+            const numSS = ss["N° SS"];
             const pts = getPTsPorSS(numSS);
             if (pts.length === 0) csv.push([numSS, ss["Local"], ss["Descrição"], ss["Status"], ss["Requisitante"], ss["Data"], "","","","","",""]);
             else pts.forEach(pt => csv.push([numSS, ss["Local"], ss["Descrição"], ss["Status"], ss["Requisitante"], ss["Data"], pt.numPT, pt.local, pt.supervisor, pt.encarregado, pt.status, pt.data]));
