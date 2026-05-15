@@ -441,6 +441,74 @@
         .status-select.atrasada { background: #fee2e2; color: #dc2626; border-color: #ef4444; }
         .status-select.cancelada { background: transparent; color: #ef4444; border-color: #ef4444; font-weight: bold; }
 
+        /* Paginação */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 16px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #2c6e9e;
+            color: white;
+            border-color: #2c6e9e;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .pagination .page-numbers {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .pagination .page-number {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .pagination .page-number.active {
+            background: #2c6e9e;
+            color: white;
+            border-color: #2c6e9e;
+        }
+
+        .pagination .page-number:hover:not(.active) {
+            background: #e2e8f0;
+        }
+
         /* Modais */
         .modal {
             display: none;
@@ -591,6 +659,10 @@
                 font-size: 0.65rem;
                 padding: 4px 6px;
             }
+
+            .pagination .page-numbers {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -687,6 +759,15 @@
                 <tbody id="tabelaSS"></tbody>
             </table>
         </div>
+        <!-- Paginação -->
+        <div class="pagination" id="pagination">
+            <button id="btnPrimeiro" onclick="irParaPagina(1)">⏮ Primeiro</button>
+            <button id="btnAnterior" onclick="paginaAnterior()">◀ Anterior</button>
+            <div class="page-numbers" id="pageNumbers"></div>
+            <button id="btnProximo" onclick="proximaPagina()">Próximo ▶</button>
+            <button id="btnUltimo" onclick="irParaPagina(totalPaginas)">Último ⏭</button>
+            <span class="page-info" id="pageInfo"></span>
+        </div>
     </div>
 
     <!-- TAB USUÁRIOS -->
@@ -770,12 +851,17 @@
     let usuarios = [], usuarioAtual = null, dadosPlanilha = [], ssAtual = null;
     let ptsPorSS = JSON.parse(localStorage.getItem('pts_por_ss') || '{}');
     let expandedRows = JSON.parse(localStorage.getItem('expanded_rows_ss') || '{}');
+    
+    // Variáveis de paginação
+    let dadosFiltrados = [];
+    let paginaAtual = 1;
+    let itensPorPagina = 30;
+    let totalPaginas = 1;
 
-    // Função CORRIGIDA para converter data (soma 1 ao mês)
+    // Função para converter data
     function converterDataSimples(valor) {
         if (!valor) return '';
         let str = String(valor);
-        
         let match = str.match(/date\((\d+),(\d+),(\d+)\)/i);
         if (match) {
             let ano = match[1];
@@ -785,7 +871,6 @@
             if (mes === 14) mes = 1;
             return dia.padStart(2, '0') + '/' + String(mes).padStart(2, '0') + '/' + ano;
         }
-        
         return str;
     }
 
@@ -811,36 +896,17 @@
                 });
             }
             
-            // Carregar status salvos no localStorage
+            // Carregar status salvos
             dadosPlanilha.forEach(ss => {
                 const numSS = ss["N° SS"];
                 const statusSalvo = localStorage.getItem('status_ss_' + numSS);
-                if (statusSalvo) {
-                    ss["Status"] = statusSalvo;
-                }
+                if (statusSalvo) ss["Status"] = statusSalvo;
             });
             
             aplicarFiltros();
         } catch (error) {
             console.error("Erro:", error);
-            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. <tr></tr>';
-        }
-    }
-
-    function alterarStatusSS(numSS, novoStatus) {
-        const ss = dadosPlanilha.find(s => s["N° SS"] === numSS);
-        if (ss) {
-            ss["Status"] = novoStatus;
-            localStorage.setItem('status_ss_' + numSS, novoStatus);
-            atualizarCards(dadosPlanilha);
-            aplicarFiltros();
-            
-            // Mostrar toast de confirmação
-            const toast = document.createElement('div');
-            toast.className = 'toast-success';
-            toast.textContent = `✅ Status da SS ${numSS} alterado para ${novoStatus}`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
+            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha.</td></tr>';
         }
     }
 
@@ -855,11 +921,32 @@
         }
     }
 
+    function alterarStatusSS(numSS, novoStatus, selectElement) {
+        const ss = dadosPlanilha.find(s => s["N° SS"] === numSS);
+        if (ss) {
+            ss["Status"] = novoStatus;
+            localStorage.setItem('status_ss_' + numSS, novoStatus);
+            
+            // Atualiza a classe do select para mudar a cor
+            const novaClasse = getStatusClass(novoStatus);
+            selectElement.className = `status-select ${novaClasse}`;
+            
+            atualizarCards(dadosPlanilha);
+            aplicarFiltros();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-success';
+            toast.textContent = `✅ Status da SS ${numSS} alterado para ${novoStatus}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+    }
+
     function aplicarFiltros() {
         const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
         const statusFilter = document.getElementById('statusFilter')?.value || 'todos';
         
-        let filtradas = dadosPlanilha.filter(s => {
+        dadosFiltrados = dadosPlanilha.filter(s => {
             const numSS = s["N° SS"] || '';
             const matchSearch = String(numSS).toLowerCase().includes(search) ||
                                (s["Local"] || "").toLowerCase().includes(search) ||
@@ -868,47 +955,35 @@
             return matchSearch && matchStatus;
         });
         
-        atualizarTabela(filtradas);
-        atualizarCards(filtradas);
+        // Resetar para primeira página ao filtrar
+        paginaAtual = 1;
+        totalPaginas = Math.ceil(dadosFiltrados.length / itensPorPagina);
+        if (totalPaginas === 0) totalPaginas = 1;
+        
+        atualizarTabela();
+        atualizarCards(dadosPlanilha);
+        atualizarPaginacao();
     }
 
-    function atualizarCards(filtradas) {
-        const total = filtradas.length;
-        const planejada = filtradas.filter(s => s["Status"] === "Planejada").length;
-        const andamento = filtradas.filter(s => s["Status"] === "Em andamento").length;
-        const concluida = filtradas.filter(s => s["Status"] === "Concluída").length;
-        const atrasada = filtradas.filter(s => s["Status"] === "Atrasada").length;
-        
-        document.getElementById('totalSS').textContent = total;
-        document.getElementById('totalPlanejada').textContent = planejada;
-        document.getElementById('totalAndamento').textContent = andamento;
-        document.getElementById('totalConcluida').textContent = concluida;
-        document.getElementById('totalAtrasada').textContent = atrasada;
-        
-        let todasPTs = [];
-        for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
-        document.getElementById('totalPTsGeral').textContent = todasPTs.length;
-    }
-
-    function atualizarTabela(filtradas) {
+    function atualizarTabela() {
         const tbody = document.getElementById('tabelaSS');
-        if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada</td></table>'; return; }
+        const inicio = (paginaAtual - 1) * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        const paginaDados = dadosFiltrados.slice(inicio, fim);
+        
+        if (paginaDados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada</td></tr>';
+            return;
+        }
         
         let html = '';
-        filtradas.forEach(s => {
+        paginaDados.forEach(s => {
             const numSS = s["N° SS"];
             const pts = ptsPorSS[numSS] || [];
             const isExpanded = expandedRows[numSS] === true;
             const expandIcon = pts.length > 0 ? `<span class="expand-icon" onclick="toggleExpand('${numSS}')">${isExpanded ? '▼' : '▶'}</span>` : '•';
-            
             const ssJson = JSON.stringify(s).replace(/"/g, '&quot;');
             const statusClass = getStatusClass(s["Status"]);
-            
-            let optionPlanejada = s["Status"] === "Planejada" ? 'selected' : '';
-            let optionAndamento = s["Status"] === "Em andamento" ? 'selected' : '';
-            let optionConcluida = s["Status"] === "Concluída" ? 'selected' : '';
-            let optionAtrasada = s["Status"] === "Atrasada" ? 'selected' : '';
-            let optionCancelada = s["Status"] === "Cancelada" ? 'selected' : '';
             
             html += `<tr>
                 <td style="text-align:center">${expandIcon}</td>
@@ -916,12 +991,12 @@
                 <td>${s["Local"] || '-'}</td>
                 <td>${(s["Descrição"] || '').substring(0, 45)}${(s["Descrição"] || '').length > 45 ? '...' : ''}</td>
                 <td>
-                    <select class="status-select ${statusClass}" data-numss="${numSS}" onchange="alterarStatusSS('${numSS}', this.value)">
-                        <option value="Planejada" ${optionPlanejada}>📋 Planejada</option>
-                        <option value="Em andamento" ${optionAndamento}>⚙️ Em andamento</option>
-                        <option value="Concluída" ${optionConcluida}>✅ Concluída</option>
-                        <option value="Atrasada" ${optionAtrasada}>⚠️ Atrasada</option>
-                        <option value="Cancelada" ${optionCancelada}>❌ Cancelada</option>
+                    <select class="status-select ${statusClass}" onchange="alterarStatusSS('${numSS}', this.value, this)">
+                        <option value="Planejada" ${s["Status"] === "Planejada" ? 'selected' : ''}>📋 Planejada</option>
+                        <option value="Em andamento" ${s["Status"] === "Em andamento" ? 'selected' : ''}>⚙️ Em andamento</option>
+                        <option value="Concluída" ${s["Status"] === "Concluída" ? 'selected' : ''}>✅ Concluída</option>
+                        <option value="Atrasada" ${s["Status"] === "Atrasada" ? 'selected' : ''}>⚠️ Atrasada</option>
+                        <option value="Cancelada" ${s["Status"] === "Cancelada" ? 'selected' : ''}>❌ Cancelada</option>
                     </select>
                 </td>
                 <td>${s["Requisitante"] || '-'}</td>
@@ -952,14 +1027,74 @@
                 html += `<tr class="pt-row">
                     <td class="pt-indent"></td>
                     <td colspan="8">
-                        <div class="pt-cards-container">
-                            ${cardsHtml}
-                        </div>
+                        <div class="pt-cards-container">${cardsHtml}</div>
                     </td>
                 </tr>`;
             }
         });
         tbody.innerHTML = html;
+    }
+
+    function atualizarPaginacao() {
+        const pageNumbersDiv = document.getElementById('pageNumbers');
+        const pageInfo = document.getElementById('pageInfo');
+        const totalRegistros = dadosFiltrados.length;
+        
+        pageInfo.textContent = `Mostrando ${Math.min((paginaAtual-1)*itensPorPagina + 1, totalRegistros)} a ${Math.min(paginaAtual*itensPorPagina, totalRegistros)} de ${totalRegistros} registros`;
+        
+        // Gerar números das páginas
+        let html = '';
+        const maxPages = 5;
+        let inicioPaginas = Math.max(1, paginaAtual - Math.floor(maxPages/2));
+        let fimPaginas = Math.min(totalPaginas, inicioPaginas + maxPages - 1);
+        
+        if (fimPaginas - inicioPaginas + 1 < maxPages) {
+            inicioPaginas = Math.max(1, fimPaginas - maxPages + 1);
+        }
+        
+        for (let i = inicioPaginas; i <= fimPaginas; i++) {
+            html += `<span class="page-number ${i === paginaAtual ? 'active' : ''}" onclick="irParaPagina(${i})">${i}</span>`;
+        }
+        pageNumbersDiv.innerHTML = html;
+        
+        // Atualizar botões
+        document.getElementById('btnPrimeiro').disabled = paginaAtual === 1;
+        document.getElementById('btnAnterior').disabled = paginaAtual === 1;
+        document.getElementById('btnProximo').disabled = paginaAtual === totalPaginas;
+        document.getElementById('btnUltimo').disabled = paginaAtual === totalPaginas;
+    }
+
+    function irParaPagina(pagina) {
+        if (pagina < 1 || pagina > totalPaginas) return;
+        paginaAtual = pagina;
+        atualizarTabela();
+        atualizarPaginacao();
+    }
+
+    function paginaAnterior() {
+        if (paginaAtual > 1) irParaPagina(paginaAtual - 1);
+    }
+
+    function proximaPagina() {
+        if (paginaAtual < totalPaginas) irParaPagina(paginaAtual + 1);
+    }
+
+    function atualizarCards(filtradas) {
+        const total = dadosPlanilha.length;
+        const planejada = dadosPlanilha.filter(s => s["Status"] === "Planejada").length;
+        const andamento = dadosPlanilha.filter(s => s["Status"] === "Em andamento").length;
+        const concluida = dadosPlanilha.filter(s => s["Status"] === "Concluída").length;
+        const atrasada = dadosPlanilha.filter(s => s["Status"] === "Atrasada").length;
+        
+        document.getElementById('totalSS').textContent = total;
+        document.getElementById('totalPlanejada').textContent = planejada;
+        document.getElementById('totalAndamento').textContent = andamento;
+        document.getElementById('totalConcluida').textContent = concluida;
+        document.getElementById('totalAtrasada').textContent = atrasada;
+        
+        let todasPTs = [];
+        for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
+        document.getElementById('totalPTsGeral').textContent = todasPTs.length;
     }
 
     function getPTsPorSS(numSS) { return ptsPorSS[numSS] || []; }
