@@ -361,6 +361,7 @@
         .status-andamento { background: #dbeafe; color: #2563eb; }
         .status-concluida { background: #d1fae5; color: #059669; }
         .status-atrasada { background: #fee2e2; color: #dc2626; }
+        .status-cancelado { background: #e2e8f0; color: #64748b; }
 
         /* PT Sub-linhas */
         .pt-row td {
@@ -416,6 +417,26 @@
             padding: 3px 10px;
             border-radius: 15px;
             font-size: 0.7rem;
+        }
+
+        /* Status Select */
+        .status-select {
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-select:hover {
+            border-color: #2c6e9e;
+        }
+
+        .status-select option {
+            padding: 8px;
         }
 
         /* Modais */
@@ -511,6 +532,26 @@
             align-items: flex-start;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        /* Toast */
+        .toast-success {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            z-index: 9999;
+            animation: fadeOut 2s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); visibility: hidden; }
         }
 
         /* Responsivo */
@@ -625,6 +666,7 @@
                     <option value="Em andamento">Em andamento</option>
                     <option value="Concluída">Concluída</option>
                     <option value="Atrasada">Atrasada</option>
+                    <option value="Cancelada">Cancelada</option>
                 </select>
                 <button class="btn btn-success" onclick="exportarParaExcel()">📎 Exportar</button>
             </div>
@@ -632,7 +674,7 @@
         <div class="table-wrapper">
             <table>
                 <thead>
-                    <tr><th style="width:30px"></th><th>N° SS</th><th>Local</th><th>Descrição</th> <th style="width: 100px">Status</th><th>Requisitante</th><th>Data</th><th style="width: 100px">PTs</th><th>Ações</th></tr>
+                    <tr><th style="width:30px"></th><th>N° SS</th><th>Local</th><th>Descrição</th><th style="width: 140px">Status</th><th>Requisitante</th><th>Data</th><th style="width: 80px">PTs</th><th>Ações</th></tr>
                 </thead>
                 <tbody id="tabelaSS"></tbody>
             </table>
@@ -750,21 +792,47 @@
             dadosPlanilha = [];
             for (let i = 0; i < linhas.length; i++) {
                 const linha = linhas[i];
-                if (!linha[0]) continue; // Pula linhas vazias
+                if (!linha[0]) continue;
                 dadosPlanilha.push({
                     "N° SS": linha[0],
                     "Local": linha[1],
                     "Descrição": linha[2],
-                    "Status": linha[3],
+                    "Status": linha[3] || "Planejada",
                     "Requisitante": linha[4],
                     "Data": converterDataSimples(linha[5])
                 });
             }
             
+            // Carregar status salvos no localStorage
+            dadosPlanilha.forEach(ss => {
+                const numSS = ss["N° SS"];
+                const statusSalvo = localStorage.getItem('status_ss_' + numSS);
+                if (statusSalvo) {
+                    ss["Status"] = statusSalvo;
+                }
+            });
+            
             aplicarFiltros();
         } catch (error) {
             console.error("Erro:", error);
             document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. </td></tr>';
+        }
+    }
+
+    function alterarStatusSS(numSS, novoStatus) {
+        const ss = dadosPlanilha.find(s => s["N° SS"] === numSS);
+        if (ss) {
+            ss["Status"] = novoStatus;
+            localStorage.setItem('status_ss_' + numSS, novoStatus);
+            atualizarCards(dadosPlanilha);
+            aplicarFiltros();
+            
+            // Mostrar toast de confirmação
+            const toast = document.createElement('div');
+            toast.className = 'toast-success';
+            toast.textContent = `✅ Status da SS ${numSS} alterado para ${novoStatus}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
         }
     }
 
@@ -791,12 +859,13 @@
         const andamento = filtradas.filter(s => s["Status"] === "Em andamento").length;
         const concluida = filtradas.filter(s => s["Status"] === "Concluída").length;
         const atrasada = filtradas.filter(s => s["Status"] === "Atrasada").length;
+        const cancelada = filtradas.filter(s => s["Status"] === "Cancelada").length;
         
         document.getElementById('totalSS').textContent = total;
         document.getElementById('totalPlanejada').textContent = planejada;
         document.getElementById('totalAndamento').textContent = andamento;
         document.getElementById('totalConcluida').textContent = concluida;
-        document.getElementById('totalAtrasada').textContent = atrasada;
+        document.getElementById('totalAtrasada').textContent = atrasada + cancelada;
         
         let todasPTs = [];
         for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
@@ -814,26 +883,28 @@
             const isExpanded = expandedRows[numSS] === true;
             const expandIcon = pts.length > 0 ? `<span class="expand-icon" onclick="toggleExpand('${numSS}')">${isExpanded ? '▼' : '▶'}</span>` : '•';
             
-            let statusClass = "status-planejada";
-            if (s["Status"] === "Em andamento") statusClass = "status-andamento";
-            else if (s["Status"] === "Concluída") statusClass = "status-concluida";
-            else if (s["Status"] === "Atrasada") statusClass = "status-atrasada";
-            
             const ssJson = JSON.stringify(s).replace(/"/g, '&quot;');
             
             html += `<tr>
                 <td style="text-align:center">${expandIcon}</td>
                 <td><strong>${numSS || '-'}</strong></td>
                 <td>${s["Local"] || '-'}</td>
-                <td>${(s["Descrição"] || '').substring(0, 45)}</td>
-                <td><span class="status-badge ${statusClass}">${s["Status"] || '-'}</span></td>
+                <td>${(s["Descrição"] || '').substring(0, 45)}${(s["Descrição"] || '').length > 45 ? '...' : ''}</td>
+                <td>
+                    <select class="status-select" data-numss="${numSS}" onchange="alterarStatusSS('${numSS}', this.value)" style="background: ${s["Status"] === 'Planejada' ? '#fef3c7' : s["Status"] === 'Em andamento' ? '#dbeafe' : s["Status"] === 'Concluída' ? '#d1fae5' : s["Status"] === 'Atrasada' ? '#fee2e2' : '#e2e8f0'}; color: ${s["Status"] === 'Planejada' ? '#d97706' : s["Status"] === 'Em andamento' ? '#2563eb' : s["Status"] === 'Concluída' ? '#059669' : s["Status"] === 'Atrasada' ? '#dc2626' : '#64748b'};">
+                        <option value="Planejada" ${s["Status"] === "Planejada" ? 'selected' : ''}>📋 Planejada</option>
+                        <option value="Em andamento" ${s["Status"] === "Em andamento" ? 'selected' : ''}>⚙️ Em andamento</option>
+                        <option value="Concluída" ${s["Status"] === "Concluída" ? 'selected' : ''}>✅ Concluída</option>
+                        <option value="Atrasada" ${s["Status"] === "Atrasada" ? 'selected' : ''}>⚠️ Atrasada</option>
+                        <option value="Cancelada" ${s["Status"] === "Cancelada" ? 'selected' : ''}>❌ Cancelada</option>
+                    </select>
+                </td>
                 <td>${s["Requisitante"] || '-'}</td>
                 <td>${s["Data"] || '-'}</td>
                 <td><span class="badge-pt">${pts.length} PT(s)</span></td>
                 <td><button class="btn btn-warning btn-sm" onclick='abrirModalPTs(${ssJson})'>📋 PTs</button></td>
             </tr>`;
             
-            // Mostrar PTs em CARDS lado a lado quando expandido
             if (isExpanded && pts.length > 0) {
                 let cardsHtml = '';
                 pts.forEach(pt => {
