@@ -693,7 +693,7 @@
 
 <script>
     const ID_PLANILHA = "1nkeGxmtSjeEY5pBZiCfAUROcy-zkO-pSaXhgDIhGJnM";
-    const URL_API = `https://docs.google.com/spreadsheets/d/${ID_PLANILHA}/gviz/tq?tqx=out:json`;
+    const URL_API = `https://docs.google.com/spreadsheets/d/${ID_PLANILHA}/gviz/tq?sheet=dados&tqx=out:json`;
     
     let usuarios = [], usuarioAtual = null, dadosPlanilha = [], ssAtual = null;
     let ptsPorSS = JSON.parse(localStorage.getItem('pts_por_ss') || '{}');
