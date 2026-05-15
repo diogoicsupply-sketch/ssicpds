@@ -702,53 +702,44 @@
     let expandedRows = JSON.parse(localStorage.getItem('expanded_rows_ss') || '{}');
 
     // Função CORRIGIDA para converter data do formato DATE(ano,mes,dia) para DD/MM/AAAA
-    function converterDataParaBrasileiro(valor) {
-        if (!valor) return '';
+  function converterDataParaBrasileiro(valor) {
+    if (!valor) return '';
+    
+    // Converte para string e verifica se é DATE(ano,mes,dia)
+    let valorStr = String(valor);
+    
+    if (valorStr.includes('DATE(')) {
+        // Remove "DATE(" e ")"
+        let numeros = valorStr.replace('DATE(', '').replace(')', '');
+        // Separa os números: ano, mes, dia
+        let partes = numeros.split(',');
         
-        // Caso 1: Formato DATE(2026,4,13) do Google Sheets
-        const dateMatch = String(valor).match(/DATE\((\d+),(\d+),(\d+)\)/i);
-        if (dateMatch) {
-            const ano = dateMatch[1];
-            const mes = String(parseInt(dateMatch[2])).padStart(2, '0');
-            const dia = String(parseInt(dateMatch[3])).padStart(2, '0');
-            return `${dia}/${mes}/${ano}`;
-        }
+        let ano = partes[0].trim();
+        let mes = partes[1].trim();
+        let dia = partes[2].trim();
         
-        // Caso 2: Já está no formato DD/MM/AAAA
-        if (typeof valor === 'string' && valor.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-            return valor;
-        }
+        // Formata como dd/mm/aaaa
+        let diaFormatado = dia.padStart(2, '0');
+        let mesFormatado = mes.padStart(2, '0');
         
-        // Caso 3: Formato ISO (YYYY-MM-DD)
-        if (typeof valor === 'string' && valor.includes('-')) {
-            const partes = valor.split('T')[0].split('-');
-            if (partes.length === 3) {
-                return `${partes[2]}/${partes[1]}/${partes[0]}`;
-            }
-        }
-        
-        // Caso 4: Número serial do Excel
-        if (typeof valor === 'number' && valor > 40000 && valor < 50000) {
-            const dataBase = new Date(1899, 11, 30);
-            const data = new Date(dataBase.getTime() + (valor * 86400000));
-            const dia = String(data.getDate()).padStart(2, '0');
-            const mes = String(data.getMonth() + 1).padStart(2, '0');
-            const ano = data.getFullYear();
-            return `${dia}/${mes}/${ano}`;
-        }
-        
-        // Caso 5: Tentativa de parse genérico
-        if (valor) {
-            const dataObj = new Date(valor);
-            if (!isNaN(dataObj.getTime())) {
-                const dia = String(dataObj.getDate()).padStart(2, '0');
-                const mes = String(dataObj.getMonth() ).padStart(2, '0');
-                const ano = dataObj.getFullYear();
-                return `${dia}/${mes}/${ano}`;
-            }
-        }
-        
+        return `${diaFormatado}/${mesFormatado}/${ano}`;
+    }
+    
+    // Se já estiver no formato DD/MM/AAAA
+    if (typeof valor === 'string' && valor.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         return valor;
+    }
+    
+    // Se for ISO (YYYY-MM-DD)
+    if (typeof valor === 'string' && valor.includes('-')) {
+        const partes = valor.split('T')[0].split('-');
+        if (partes.length === 3) {
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+    }
+    
+    return valor;
+}
     }
 
     async function carregarDados() {
