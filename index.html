@@ -727,7 +727,7 @@
             const linhas = data.table.rows.map(row => row.c.map(cell => cell ? cell.v : ""));
             
             dadosPlanilha = [];
-            for (let i = 1; i < linhas.length; i++) {
+            for (let i = 0; i < linhas.length; i++) {
                 const linha = linhas[i];
                 dadosPlanilha.push({
                     "N° SS": linha[0],
