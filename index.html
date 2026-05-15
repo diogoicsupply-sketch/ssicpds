@@ -368,11 +368,27 @@
             padding: 10px 16px;
         }
 
-        .pt-card-info {
+        .pt-cards-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
+        }
+
+        .pt-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .pt-card strong {
+            color: #2c6e9e;
             font-size: 0.8rem;
         }
 
@@ -521,6 +537,10 @@
 
             .tabs, .tab-content {
                 padding: 0 12px;
+            }
+            
+            .pt-card {
+                width: 100%;
             }
         }
     </style>
@@ -701,22 +721,23 @@
     let ptsPorSS = JSON.parse(localStorage.getItem('pts_por_ss') || '{}');
     let expandedRows = JSON.parse(localStorage.getItem('expanded_rows_ss') || '{}');
 
-    // Função SIMPLES: só reorganiza DATE(ano,mes,dia) para dia/mes/ano
+    // Função CORRIGIDA para converter data (soma 1 ao mês)
     function converterDataSimples(valor) {
-    if (!valor) return '';
-    let str = String(valor);
-    
-    // Procura por Date(2026,4,15) - case insensitive
-    let match = str.match(/date\((\d+),(\d+),(\d+)\)/i);
-    if (match) {
-        let ano = match[1];
-        let mes = parseInt(match[2]) + 1;  // SOMA 1 (corrige a diferença)
-        let dia = match[3];
-        return dia.padStart(2, '0') + '/' + String(mes).padStart(2, '0') + '/' + ano;
+        if (!valor) return '';
+        let str = String(valor);
+        
+        let match = str.match(/date\((\d+),(\d+),(\d+)\)/i);
+        if (match) {
+            let ano = match[1];
+            let mes = parseInt(match[2]) + 1;
+            let dia = match[3];
+            if (mes === 13) mes = 12;
+            if (mes === 14) mes = 1;
+            return dia.padStart(2, '0') + '/' + String(mes).padStart(2, '0') + '/' + ano;
+        }
+        
+        return str;
     }
-    
-    return str;
-}
 
     async function carregarDados() {
         try {
@@ -727,8 +748,9 @@
             const linhas = data.table.rows.map(row => row.c.map(cell => cell ? cell.v : ""));
             
             dadosPlanilha = [];
-            for (let i = 0; i < linhas.length; i++) {
+            for (let i = 1; i < linhas.length; i++) {
                 const linha = linhas[i];
+                if (!linha[0]) continue; // Pula linhas vazias
                 dadosPlanilha.push({
                     "N° SS": linha[0],
                     "Local": linha[1],
@@ -811,21 +833,34 @@
                 <td><button class="btn btn-warning btn-sm" onclick='abrirModalPTs(${ssJson})'>📋 PTs</button></td>
             </tr>`;
             
+            // Mostrar PTs em CARDS lado a lado quando expandido
             if (isExpanded && pts.length > 0) {
+                let cardsHtml = '';
                 pts.forEach(pt => {
-                    html += `<tr class="pt-row">
-                        <td class="pt-indent"></td>
-                        <td colspan="8" class="pt-card-info">
-                            <span><strong>📄 PT ${pt.numPT}</strong></span>
+                    let ptStatusClass = "status-andamento";
+                    if (pt.status === 'Concluído') ptStatusClass = "status-concluida";
+                    else if (pt.status === 'Cancelado') ptStatusClass = "status-cancelado";
+                    
+                    cardsHtml += `
+                        <div class="pt-card">
+                            <strong>🔧 PT ${pt.numPT}</strong>
                             <span class="pt-tag">📍 ${pt.local || '-'}</span>
                             <span class="pt-tag">📅 ${pt.data || '-'}</span>
-                            <span class="pt-tag">${pt.status || 'Em andamento'}</span>
+                            <span class="status-badge ${ptStatusClass}" style="font-size:0.65rem;">${pt.status || 'Em andamento'}</span>
                             <span class="pt-tag">👔 ${pt.supervisor || '-'}</span>
-                            <span class="pt-tag">🔧 ${pt.encarregado || '-'}</span>
-                            <button class="btn btn-info btn-sm" onclick='abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})'>✏️</button>
-                        </td>
-                    </tr>`;
+                            <button class="btn btn-info btn-sm" onclick='event.stopPropagation(); abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})' style="padding:2px 8px; font-size:0.7rem;">✏️</button>
+                        </div>
+                    `;
                 });
+                
+                html += `<tr class="pt-row">
+                    <td class="pt-indent"></td>
+                    <td colspan="8">
+                        <div class="pt-cards-container">
+                            ${cardsHtml}
+                        </div>
+                    </td>
+                </tr>`;
             }
         });
         tbody.innerHTML = html;
