@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de SS e PTs - Porto de Santos</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,7 +17,6 @@
             min-height: 100vh;
         }
 
-        /* Login */
         .login-overlay {
             position: fixed;
             top: 0;
@@ -86,7 +84,6 @@
             transform: translateY(-2px);
         }
 
-        /* Container Principal */
         .app-container {
             display: none;
         }
@@ -119,7 +116,6 @@
             gap: 15px;
         }
 
-        /* Botões */
         .btn {
             padding: 8px 18px;
             border: none;
@@ -130,64 +126,21 @@
             font-size: 0.85rem;
         }
 
-        .btn-primary {
-            background: #2c6e9e;
-            color: white;
-        }
+        .btn-primary { background: #2c6e9e; color: white; }
+        .btn-primary:hover { background: #1a4a6e; transform: translateY(-1px); }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; transform: translateY(-1px); }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-outline { background: transparent; border: 2px solid white; color: white; }
+        .btn-outline:hover { background: white; color: #0a2b3e; }
+        .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
 
-        .btn-primary:hover {
-            background: #1a4a6e;
-            transform: translateY(-1px);
-        }
-
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-            transform: translateY(-1px);
-        }
-
-        .btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background: #d97706;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid white;
-            color: white;
-        }
-
-        .btn-outline:hover {
-            background: white;
-            color: #0a2b3e;
-        }
-
-        .btn-sm {
-            padding: 5px 12px;
-            font-size: 0.75rem;
-        }
-
-        /* Cards de Métricas */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
             padding: 0 20px;
@@ -227,7 +180,6 @@
         .metric-card.atrasada { border-left-color: #ef4444; }
         .metric-card.pts { border-left-color: #8b5cf6; }
 
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 8px;
@@ -247,31 +199,16 @@
             color: #475569;
         }
 
-        .tab:hover {
-            background: #e2e8f0;
-        }
-
-        .tab.active {
-            background: #2c6e9e;
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease;
-            padding: 0 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
+        .tab:hover { background: #e2e8f0; }
+        .tab.active { background: #2c6e9e; color: white; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; padding: 0 20px; }
+        .tab-content.active { display: block; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Barra de Ferramentas */
         .toolbar {
             background: white;
             padding: 15px 20px;
@@ -311,7 +248,7 @@
             flex-wrap: wrap;
         }
 
-        .filter-group select, .filter-group input {
+        .filter-group select {
             padding: 10px 15px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
@@ -319,7 +256,6 @@
             font-size: 0.9rem;
         }
 
-        /* Tabela */
         .table-wrapper {
             background: white;
             border-radius: 16px;
@@ -345,11 +281,8 @@
             font-size: 0.85rem;
         }
 
-        tr:hover {
-            background: #f8fafc;
-        }
+        tr:hover { background: #f8fafc; }
 
-        /* Status Badges */
         .status-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -363,7 +296,6 @@
         .status-concluida { background: #d1fae5; color: #059669; }
         .status-atrasada { background: #fee2e2; color: #dc2626; }
 
-        /* PT Sub-linhas */
         .pt-row td {
             background: #fafcff;
             padding: 10px 16px;
@@ -403,77 +335,6 @@
             font-size: 0.7rem;
         }
 
-        /* Dashboard Analytics */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-
-        .analytics-card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .analytics-card h3 {
-            font-size: 1rem;
-            color: #1e293b;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .ranking-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .ranking-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .ranking-name {
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        .ranking-count {
-            background: #e2e8f0;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #2c6e9e;
-        }
-
-        .kpi-large {
-            text-align: center;
-            padding: 15px;
-        }
-
-        .kpi-large .number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #2c6e9e;
-        }
-
-        .kpi-large .label {
-            color: #64748b;
-            font-size: 0.8rem;
-            margin-top: 5px;
-        }
-
-        /* Modais */
         .modal {
             display: none;
             position: fixed;
@@ -513,22 +374,10 @@
             transition: all 0.2s;
         }
 
-        .close-modal:hover {
-            color: #ef4444;
-        }
+        .close-modal:hover { color: #ef4444; }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            color: #475569;
-        }
-
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.8rem; color: #475569; }
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 10px 14px;
@@ -537,7 +386,6 @@
             font-size: 0.9rem;
             transition: all 0.2s;
         }
-
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
             outline: none;
             border-color: #2c6e9e;
@@ -568,37 +416,21 @@
             gap: 10px;
         }
 
-        /* Responsivo */
         @media (max-width: 768px) {
             .metrics-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
                 padding: 0 12px;
             }
-
-            .metric-card .value {
-                font-size: 1.5rem;
-            }
-
-            th, td {
-                padding: 8px 10px;
-                font-size: 0.7rem;
-            }
-
-            .btn {
-                padding: 6px 12px;
-                font-size: 0.7rem;
-            }
-
-            .tabs, .tab-content {
-                padding: 0 12px;
-            }
+            .metric-card .value { font-size: 1.5rem; }
+            th, td { padding: 8px 10px; font-size: 0.7rem; }
+            .btn { padding: 6px 12px; font-size: 0.7rem; }
+            .tabs, .tab-content { padding: 0 12px; }
         }
     </style>
 </head>
 <body>
 
-<!-- TELA DE LOGIN -->
 <div id="loginOverlay" class="login-overlay">
     <div class="login-box">
         <h2>⚓ Porto de Santos</h2>
@@ -614,7 +446,6 @@
     </div>
 </div>
 
-<!-- CONTEÚDO PRINCIPAL -->
 <div id="mainContent" class="app-container">
     <div class="header">
         <div class="logo-area">
@@ -628,43 +459,20 @@
         </div>
     </div>
 
-    <!-- MÉTRICAS PRINCIPAIS -->
     <div class="metrics-grid">
-        <div class="metric-card total">
-            <div class="value" id="totalSS">0</div>
-            <div class="label">Total de SS</div>
-        </div>
-        <div class="metric-card planejada">
-            <div class="value" id="totalPlanejada">0</div>
-            <div class="label">Planejadas</div>
-        </div>
-        <div class="metric-card andamento">
-            <div class="value" id="totalAndamento">0</div>
-            <div class="label">Em Andamento</div>
-        </div>
-        <div class="metric-card concluida">
-            <div class="value" id="totalConcluida">0</div>
-            <div class="label">Concluídas</div>
-        </div>
-        <div class="metric-card atrasada">
-            <div class="value" id="totalAtrasada">0</div>
-            <div class="label">Atrasadas</div>
-        </div>
-        <div class="metric-card pts">
-            <div class="value" id="totalPTsGeral">0</div>
-            <div class="label">Total de PTs</div>
-        </div>
+        <div class="metric-card total"><div class="value" id="totalSS">0</div><div class="label">Total de SS</div></div>
+        <div class="metric-card planejada"><div class="value" id="totalPlanejada">0</div><div class="label">Planejadas</div></div>
+        <div class="metric-card andamento"><div class="value" id="totalAndamento">0</div><div class="label">Em Andamento</div></div>
+        <div class="metric-card concluida"><div class="value" id="totalConcluida">0</div><div class="label">Concluídas</div></div>
+        <div class="metric-card atrasada"><div class="value" id="totalAtrasada">0</div><div class="label">Atrasadas</div></div>
+        <div class="metric-card pts"><div class="value" id="totalPTsGeral">0</div><div class="label">Total de PTs</div></div>
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
         <button class="tab active" onclick="mostrarTab('lista')">📋 Lista de SS</button>
-        <button class="tab" onclick="mostrarTab('dashboard')">📊 Dashboard</button>
-        <button class="tab" onclick="mostrarTab('dashboardPT')">👥 Equipe</button>
         <button class="tab" onclick="mostrarTab('usuarios')">👤 Usuários</button>
     </div>
 
-    <!-- TAB LISTA -->
     <div id="tab-lista" class="tab-content active">
         <div class="toolbar">
             <div class="search-group">
@@ -679,73 +487,20 @@
                     <option value="Concluída">Concluída</option>
                     <option value="Atrasada">Atrasada</option>
                 </select>
-                <input type="month" id="mesFilter" onchange="aplicarFiltros()" placeholder="Mês">
                 <button class="btn btn-success" onclick="exportarParaExcel()">📎 Exportar</button>
             </div>
         </div>
         <div class="table-wrapper">
             <table>
-                <thead>
-                    <tr><th style="width:30px"></th><th>N° SS</th><th>Local</th><th>Descrição</th><th>Status</th><th>Requisitante</th><th>Data</th><th>PTs</th><th>Ações</th></tr>
-                </thead>
+                <thead><tr><th style="width:30px"></th><th>N° SS</th><th>Local</th><th>Descrição</th><th>Status</th><th>Requisitante</th><th>Data</th><th>PTs</th><th>Ações</th></tr></thead>
                 <tbody id="tabelaSS"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- TAB DASHBOARD SS -->
-    <div id="tab-dashboard" class="tab-content">
-        <div class="dashboard-grid">
-            <div class="analytics-card">
-                <h3>📊 Status das Solicitações</h3>
-                <canvas id="statusChart" style="max-height: 250px;"></canvas>
-            </div>
-            <div class="analytics-card">
-                <h3>📈 Evolução Mensal</h3>
-                <canvas id="mensalChart" style="max-height: 250px;"></canvas>
-            </div>
-            <div class="analytics-card">
-                <h3>🎯 Taxa de Conclusão</h3>
-                <div class="kpi-large">
-                    <div class="number" id="taxaConclusao">0%</div>
-                    <div class="label">das solicitações concluídas</div>
-                </div>
-                <div class="kpi-large">
-                    <div class="number" id="taxaAtraso">0%</div>
-                    <div class="label">de solicitações atrasadas</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB DASHBOARD EQUIPE (Supervisores e Encarregados) -->
-    <div id="tab-dashboardPT" class="tab-content">
-        <div class="dashboard-grid">
-            <div class="analytics-card">
-                <h3>👔 Ranking - Supervisores</h3>
-                <div class="ranking-list" id="rankingSupervisores"></div>
-            </div>
-            <div class="analytics-card">
-                <h3>🔧 Ranking - Encarregados</h3>
-                <div class="ranking-list" id="rankingEncarregados"></div>
-            </div>
-        </div>
-        <div class="dashboard-grid">
-            <div class="analytics-card">
-                <h3>📌 Status das PTs</h3>
-                <canvas id="ptStatusChart" style="max-height: 220px;"></canvas>
-            </div>
-            <div class="analytics-card">
-                <h3>📊 PTs por Status</h3>
-                <div id="ptStatusResumo" style="display: flex; justify-content: space-around; text-align: center; padding: 15px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB USUÁRIOS -->
     <div id="tab-usuarios" class="tab-content">
-        <div class="analytics-card">
-            <h3>👥 Usuários do Sistema</h3>
+        <div class="table-wrapper" style="padding: 20px;">
+            <h3 style="margin-bottom: 15px;">👥 Usuários do Sistema</h3>
             <div style="margin-bottom: 20px;">
                 <input type="text" id="novoUsuario" placeholder="Nome do novo usuário" style="padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 12px; width: 250px;">
                 <button class="btn btn-success" onclick="abrirModalCadastrarUsuario()" style="margin-left: 10px;">+ Adicionar</button>
@@ -755,29 +510,19 @@
     </div>
 </div>
 
-<!-- MODAL EDITAR PT -->
 <div id="modalEditarPT" class="modal">
     <div class="modal-content">
         <div class="modal-header"><h2>✏️ Editar PT</h2><span class="close-modal" onclick="fecharModalEditarPT()">&times;</span></div>
         <form id="formEditarPT" onsubmit="salvarEdicaoPT(event)">
             <input type="hidden" id="editNumSS"><input type="hidden" id="editNumPTOriginal">
-            <div class="form-row">
-                <div class="form-group"><label>N° PT</label><input type="text" id="editNumPT" required></div>
-                <div class="form-group"><label>Local</label><input type="text" id="editLocalPT" required></div>
-                <div class="form-group"><label>Data</label><input type="date" id="editDataPT" required></div>
-            </div>
+            <div class="form-row"><div class="form-group"><label>N° PT</label><input type="text" id="editNumPT" required></div><div class="form-group"><label>Local</label><input type="text" id="editLocalPT" required></div><div class="form-group"><label>Data</label><input type="date" id="editDataPT" required></div></div>
             <div class="form-group"><label>Descrição</label><textarea id="editDescricaoPT" rows="2" required></textarea></div>
-            <div class="form-row">
-                <div class="form-group"><label>Supervisor</label><select id="editSupervisorPT"><option>Jaime Ferreira de Freitas</option><option>José Carlos de Aguiar</option></select></div>
-                <div class="form-group"><label>Encarregado</label><select id="editEncarregadoPT"><option>Adilson Costa Santos</option><option>Anderson Almeida dos Santos</option><option>Douglas Rodrigues dos Santos</option><option>Francisco Rodrigues Coelho</option><option>José Edson da Silva</option><option>Reginaldo Mauricio Fernandes</option><option>Romildo de Castro Santos</option><option>Silvio primo Gonçalves</option></select></div>
-                <div class="form-group"><label>Status</label><select id="editStatusPT"><option>Em andamento</option><option>Concluído</option><option>Cancelado</option><option>Planejado</option></select></div>
-            </div>
+            <div class="form-row"><div class="form-group"><label>Supervisor</label><select id="editSupervisorPT"><option>Jaime Ferreira de Freitas</option><option>José Carlos de Aguiar</option></select></div><div class="form-group"><label>Encarregado</label><select id="editEncarregadoPT"><option>Adilson Costa Santos</option><option>Anderson Almeida dos Santos</option><option>Douglas Rodrigues dos Santos</option><option>Francisco Rodrigues Coelho</option><option>José Edson da Silva</option><option>Reginaldo Mauricio Fernandes</option><option>Romildo de Castro Santos</option><option>Silvio primo Gonçalves</option></select></div><div class="form-group"><label>Status</label><select id="editStatusPT"><option>Em andamento</option><option>Concluído</option><option>Cancelado</option><option>Planejado</option></select></div></div>
             <div class="modal-footer"><button type="button" class="btn" onclick="fecharModalEditarPT()">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
         </form>
     </div>
 </div>
 
-<!-- MODAL GERENCIAR PTs -->
 <div id="modalPTs" class="modal">
     <div class="modal-content">
         <div class="modal-header"><h2 id="modalPTsTitle">Gerenciar PTs</h2><span class="close-modal" onclick="fecharModalPTs()">&times;</span></div>
@@ -785,23 +530,14 @@
         <h4>📌 PTs Vinculadas</h4><div id="ptsVinculadas" style="margin-bottom: 20px;"></div>
         <h4>➕ Adicionar PT</h4>
         <form id="formAdicionarPT" onsubmit="adicionarPTManual(event)">
-            <div class="form-row">
-                <div class="form-group"><label>N° PT</label><input type="text" id="novoNumPT" required></div>
-                <div class="form-group"><label>Local</label><input type="text" id="novoLocalPT" required></div>
-                <div class="form-group"><label>Data</label><input type="date" id="novaDataPT" required></div>
-            </div>
+            <div class="form-row"><div class="form-group"><label>N° PT</label><input type="text" id="novoNumPT" required></div><div class="form-group"><label>Local</label><input type="text" id="novoLocalPT" required></div><div class="form-group"><label>Data</label><input type="date" id="novaDataPT" required></div></div>
             <div class="form-group"><label>Descrição</label><textarea id="novaDescricaoPT" rows="2" required></textarea></div>
-            <div class="form-row">
-                <div class="form-group"><label>Supervisor</label><select id="novoSupervisorPT"><option>Jaime Ferreira de Freitas</option><option>José Carlos de Aguiar</option></select></div>
-                <div class="form-group"><label>Encarregado</label><select id="novoEncarregadoPT"><option>Adilson Costa Santos</option><option>Anderson Almeida dos Santos</option><option>Douglas Rodrigues dos Santos</option><option>Francisco Rodrigues Coelho</option><option>José Edson da Silva</option><option>Reginaldo Mauricio Fernandes</option><option>Romildo de Castro Santos</option><option>Silvio primo Gonçalves</option></select></div>
-                <div class="form-group"><label>Status</label><select id="novoStatusPT"><option>Em andamento</option><option>Concluído</option><option>Cancelado</option><option>Planejado</option></select></div>
-            </div>
+            <div class="form-row"><div class="form-group"><label>Supervisor</label><select id="novoSupervisorPT"><option>Jaime Ferreira de Freitas</option><option>José Carlos de Aguiar</option></select></div><div class="form-group"><label>Encarregado</label><select id="novoEncarregadoPT"><option>Adilson Costa Santos</option><option>Anderson Almeida dos Santos</option><option>Douglas Rodrigues dos Santos</option><option>Francisco Rodrigues Coelho</option><option>José Edson da Silva</option><option>Reginaldo Mauricio Fernandes</option><option>Romildo de Castro Santos</option><option>Silvio primo Gonçalves</option></select></div><div class="form-group"><label>Status</label><select id="novoStatusPT"><option>Em andamento</option><option>Concluído</option><option>Cancelado</option><option>Planejado</option></select></div></div>
             <div class="modal-footer"><button type="button" class="btn" onclick="fecharModalPTs()">Fechar</button><button type="submit" class="btn btn-success">Adicionar</button></div>
         </form>
     </div>
 </div>
 
-<!-- MODAL SENHA -->
 <div id="modalSenha" class="modal">
     <div class="modal-content">
         <div class="modal-header"><h2 id="modalSenhaTitle">Alterar Senha</h2><span class="close-modal" onclick="fecharModalSenha()">&times;</span></div>
@@ -816,24 +552,34 @@
 
 <script>
     const ID_PLANILHA = "1nkeGxmtSjeEY5pBZiCfAUROcy-zkO-pSaXhgDIhGJnM";
-    const URL_API = `https://docs.google.com/spreadsheets/d/${ID_PLANILHA}/gviz/tq?tqx=out:json`;
+    const URL_API = `https://docs.google.com/spreadsheets/d/${ID_PLANILHA}/gviz/tq?sheet=dados&tqx=out:json`;
     
     let usuarios = [], usuarioAtual = null, dadosPlanilha = [], ssAtual = null;
     let ptsPorSS = JSON.parse(localStorage.getItem('pts_por_ss') || '{}');
     let expandedRows = JSON.parse(localStorage.getItem('expanded_rows_ss') || '{}');
-    let chartStatus = null, chartMensal = null, chartPTStatus = null;
 
-    function corrigirData(valor) {
+    function formatarDataParaDMY(valor) {
         if (!valor) return '';
+        const dateMatch = String(valor).match(/DATE\((\d+),(\d+),(\d+)\)/i);
+        if (dateMatch) {
+            const ano = dateMatch[1];
+            const mes = String(parseInt(dateMatch[2]) + 1).padStart(2, '0');
+            const dia = String(parseInt(dateMatch[3])).padStart(2, '0');
+            return `${dia}/${mes}/${ano}`;
+        }
         if (typeof valor === 'number' && valor > 40000 && valor < 50000) {
             const dataBase = new Date(1899, 11, 30);
-            return new Date(dataBase.getTime() + (valor * 86400000)).toISOString().split('T')[0];
+            const data = new Date(dataBase.getTime() + (valor * 86400000));
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            return `${dia}/${mes}/${ano}`;
         }
-        if (typeof valor === 'string' && valor.includes('/')) {
-            const partes = valor.split('/');
-            if (partes.length === 3) return `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`;
+        if (typeof valor === 'string' && valor.includes('-')) {
+            const partes = valor.split('T')[0].split('-');
+            if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
         }
-        if (typeof valor === 'string' && valor.includes('-')) return valor.split('T')[0];
+        if (typeof valor === 'string' && valor.includes('/')) return valor;
         return valor;
     }
 
@@ -855,180 +601,67 @@
             if (dadosPlanilha.length === 0 && linhas.length > 1) {
                 dadosPlanilha = linhas.slice(1).map(linha => ({
                     "N° SS": linha[0], "Local": linha[1], "Descrição": linha[2],
-                    "Status": linha[3], "Requisitante": linha[4], "Data": corrigirData(linha[5])
+                    "Status": linha[3], "Requisitante": linha[4], "Data": formatarDataParaDMY(linha[5])
                 }));
             }
             
-            dadosPlanilha.forEach(ss => { if (ss["Data"]) ss["Data"] = corrigirData(ss["Data"]); });
+            dadosPlanilha.forEach(ss => { if (ss["Data"]) ss["Data"] = formatarDataParaDMY(ss["Data"]); });
             aplicarFiltros();
-            atualizarDashboard();
-            atualizarDashboardPTs();
+            atualizarCards();
         } catch (error) {
             console.error("Erro:", error);
-            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha.</td></tr>';
+            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha.穷</tr>';
         }
     }
 
     function aplicarFiltros() {
         const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
         const statusFilter = document.getElementById('statusFilter')?.value || 'todos';
-        const mesFilter = document.getElementById('mesFilter')?.value || '';
-        
         let filtradas = dadosPlanilha.filter(s => {
             const numSS = s["N° SS"] || s["Nº SS"] || '';
-            const matchSearch = String(numSS).toLowerCase().includes(search) ||
-                               (s["Local"] || "").toLowerCase().includes(search) ||
-                               (s["Descrição"] || "").toLowerCase().includes(search);
+            const matchSearch = String(numSS).toLowerCase().includes(search) || (s["Local"] || "").toLowerCase().includes(search) || (s["Descrição"] || "").toLowerCase().includes(search);
             const matchStatus = statusFilter === 'todos' || (s["Status"] || "") === statusFilter;
-            let matchMes = true;
-            if (mesFilter && s["Data"]) matchMes = s["Data"].substring(0, 7) === mesFilter;
-            return matchSearch && matchStatus && matchMes;
+            return matchSearch && matchStatus;
         });
-        
         atualizarTabela(filtradas);
         atualizarCards(filtradas);
     }
 
     function atualizarCards(filtradas) {
         const total = filtradas.length;
-        const planejada = filtradas.filter(s => s["Status"] === "Planejada").length;
-        const andamento = filtradas.filter(s => s["Status"] === "Em andamento").length;
-        const concluida = filtradas.filter(s => s["Status"] === "Concluída").length;
-        const atrasada = filtradas.filter(s => s["Status"] === "Atrasada").length;
-        
         document.getElementById('totalSS').textContent = total;
-        document.getElementById('totalPlanejada').textContent = planejada;
-        document.getElementById('totalAndamento').textContent = andamento;
-        document.getElementById('totalConcluida').textContent = concluida;
-        document.getElementById('totalAtrasada').textContent = atrasada;
-        
-        let todasPTs = [];
-        for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
+        document.getElementById('totalPlanejada').textContent = filtradas.filter(s => s["Status"] === "Planejada").length;
+        document.getElementById('totalAndamento').textContent = filtradas.filter(s => s["Status"] === "Em andamento").length;
+        document.getElementById('totalConcluida').textContent = filtradas.filter(s => s["Status"] === "Concluída").length;
+        document.getElementById('totalAtrasada').textContent = filtradas.filter(s => s["Status"] === "Atrasada").length;
+        let todasPTs = []; for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
         document.getElementById('totalPTsGeral').textContent = todasPTs.length;
     }
 
     function atualizarTabela(filtradas) {
         const tbody = document.getElementById('tabelaSS');
-        if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada</td></tr>'; return; }
-        
+        if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada</td><tr>'; return; }
         let html = '';
         filtradas.forEach(s => {
             const numSS = s["N° SS"] || s["Nº SS"];
             const pts = ptsPorSS[numSS] || [];
             const isExpanded = expandedRows[numSS] === true;
             const expandIcon = pts.length > 0 ? `<span class="expand-icon" onclick="toggleExpand('${numSS}')">${isExpanded ? '▼' : '▶'}</span>` : '•';
-            
             let statusClass = "status-planejada";
             if (s["Status"] === "Em andamento") statusClass = "status-andamento";
             else if (s["Status"] === "Concluída") statusClass = "status-concluida";
             else if (s["Status"] === "Atrasada") statusClass = "status-atrasada";
-            
             const ssJson = JSON.stringify(s).replace(/"/g, '&quot;');
-            
-            html += `<tr>
-                <td style="text-align:center">${expandIcon}</td>
-                <td><strong>${numSS || '-'}</strong></td>
-                <td>${s["Local"] || '-'}</td>
-                <td>${(s["Descrição"] || '').substring(0, 45)}</td>
-                <td><span class="status-badge ${statusClass}">${s["Status"] || '-'}</span></td>
-                <td>${s["Requisitante"] || '-'}</td>
-                <td>${s["Data"] || '-'}</td>
-                <td><span class="badge-pt">${pts.length} PT(s)</span></td>
-                <td><button class="btn btn-warning btn-sm" onclick='abrirModalPTs(${ssJson})'>📋 PTs</button></td>
-            </tr>`;
-            
+            html += `<tr><td style="text-align:center">${expandIcon}</td><td><strong>${numSS || '-'}</strong></td><td>${s["Local"] || '-'}</td><td>${(s["Descrição"] || '').substring(0, 45)}</td><td><span class="status-badge ${statusClass}">${s["Status"] || '-'}</span></td><td>${s["Requisitante"] || '-'}</td><td>${s["Data"] || '-'}</td><td><span class="badge-pt">${pts.length} PT(s)</span></td><td><button class="btn btn-warning btn-sm" onclick='abrirModalPTs(${ssJson})'>📋 PTs</button></td></tr>`;
             if (isExpanded && pts.length > 0) {
-                pts.forEach(pt => {
-                    html += `<tr class="pt-row">
-                        <td class="pt-indent"></td>
-                        <td colspan="8" class="pt-card-info">
-                            <span><strong>📄 PT ${pt.numPT}</strong></span>
-                            <span class="pt-tag">📍 ${pt.local || '-'}</span>
-                            <span class="pt-tag">📅 ${pt.data || '-'}</span>
-                            <span class="pt-tag">${pt.status || 'Em andamento'}</span>
-                            <span class="pt-tag">👔 ${pt.supervisor || '-'}</span>
-                            <span class="pt-tag">🔧 ${pt.encarregado || '-'}</span>
-                            <button class="btn btn-info btn-sm" onclick='abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})'>✏️</button>
-                        </td>
-                    </tr>`;
-                });
+                pts.forEach(pt => { html += `<tr class="pt-row"><td class="pt-indent"></td><td colspan="8" class="pt-card-info"><span><strong>📄 PT ${pt.numPT}</strong></span><span class="pt-tag">📍 ${pt.local || '-'}</span><span class="pt-tag">📅 ${pt.data || '-'}</span><span class="pt-tag">${pt.status || 'Em andamento'}</span><span class="pt-tag">👔 ${pt.supervisor || '-'}</span><span class="pt-tag">🔧 ${pt.encarregado || '-'}</span><button class="btn btn-info btn-sm" onclick='abrirModalEditarPT("${numSS}", ${JSON.stringify(pt).replace(/"/g, '&quot;')})'>✏️</button></td></tr>`; });
             }
         });
         tbody.innerHTML = html;
     }
 
-    function atualizarDashboard() {
-        const total = dadosPlanilha.length;
-        const concluidas = dadosPlanilha.filter(s => s["Status"] === "Concluída").length;
-        const atrasadas = dadosPlanilha.filter(s => s["Status"] === "Atrasada").length;
-        document.getElementById('taxaConclusao').textContent = total > 0 ? Math.round((concluidas / total) * 100) + "%" : "0%";
-        document.getElementById('taxaAtraso').textContent = total > 0 ? Math.round((atrasadas / total) * 100) + "%" : "0%";
-        
-        const statusCount = {
-            Planejada: dadosPlanilha.filter(s => s["Status"] === "Planejada").length,
-            'Em andamento': dadosPlanilha.filter(s => s["Status"] === "Em andamento").length,
-            Concluída: concluidas,
-            Atrasada: atrasadas
-        };
-        
-        const ctxStatus = document.getElementById('statusChart')?.getContext('2d');
-        if (ctxStatus) {
-            if (chartStatus) chartStatus.destroy();
-            chartStatus = new Chart(ctxStatus, {
-                type: 'doughnut',
-                data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#f59e0b', '#2c6e9e', '#10b981', '#ef4444'] }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
-            });
-        }
-        
-        const mensalData = {};
-        dadosPlanilha.forEach(s => { if (s["Data"]) { const mes = s["Data"].substring(0, 7); mensalData[mes] = (mensalData[mes] || 0) + 1; } });
-        const mesesOrdenados = Object.keys(mensalData).sort();
-        const ctxMensal = document.getElementById('mensalChart')?.getContext('2d');
-        if (ctxMensal) {
-            if (chartMensal) chartMensal.destroy();
-            chartMensal = new Chart(ctxMensal, {
-                type: 'line',
-                data: { labels: mesesOrdenados, datasets: [{ label: 'SS por Mês', data: mesesOrdenados.map(m => mensalData[m]), borderColor: '#2c6e9e', backgroundColor: 'rgba(44,110,158,0.1)', fill: true, tension: 0.3 }] },
-                options: { responsive: true, maintainAspectRatio: true }
-            });
-        }
-    }
-
-    function atualizarDashboardPTs() {
-        let todasPTs = [];
-        for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
-        
-        const supervisorCount = {};
-        todasPTs.forEach(p => { if (p.supervisor && p.supervisor !== '-') supervisorCount[p.supervisor] = (supervisorCount[p.supervisor] || 0) + 1; });
-        const rankingSup = Object.entries(supervisorCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
-        document.getElementById('rankingSupervisores').innerHTML = rankingSup.map(([nome, qtd]) => `<div class="ranking-item"><span class="ranking-name">${nome}</span><span class="ranking-count">${qtd} PTs</span></div>`).join('') || '<div style="text-align:center; padding:20px;">Nenhum dado disponível</div>';
-        
-        const encarregadoCount = {};
-        todasPTs.forEach(p => { if (p.encarregado && p.encarregado !== '-') encarregadoCount[p.encarregado] = (encarregadoCount[p.encarregado] || 0) + 1; });
-        const rankingEnc = Object.entries(encarregadoCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
-        document.getElementById('rankingEncarregados').innerHTML = rankingEnc.map(([nome, qtd]) => `<div class="ranking-item"><span class="ranking-name">${nome}</span><span class="ranking-count">${qtd} PTs</span></div>`).join('') || '<div style="text-align:center; padding:20px;">Nenhum dado disponível</div>';
-        
-        const ptStatusCount = {};
-        todasPTs.forEach(p => { ptStatusCount[p.status || 'Em andamento'] = (ptStatusCount[p.status || 'Em andamento'] || 0) + 1; });
-        const ctxPTStatus = document.getElementById('ptStatusChart')?.getContext('2d');
-        if (ctxPTStatus) {
-            if (chartPTStatus) chartPTStatus.destroy();
-            chartPTStatus = new Chart(ctxPTStatus, {
-                type: 'pie',
-                data: { labels: Object.keys(ptStatusCount), datasets: [{ data: Object.values(ptStatusCount), backgroundColor: ['#2c6e9e', '#10b981', '#ef4444', '#f59e0b'] }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
-            });
-        }
-        
-        const resumoDiv = document.getElementById('ptStatusResumo');
-        if (resumoDiv) {
-            resumoDiv.innerHTML = Object.entries(ptStatusCount).map(([status, qtd]) => `<div><div style="font-size:1.8rem; font-weight:700; color:#2c6e9e;">${qtd}</div><div style="font-size:0.7rem; color:#64748b;">${status}</div></div>`).join('');
-        }
-    }
-
     function getPTsPorSS(numSS) { return ptsPorSS[numSS] || []; }
-    function salvarPTsPorSS(numSS, pts) { ptsPorSS[numSS] = pts; localStorage.setItem('pts_por_ss', JSON.stringify(ptsPorSS)); carregarDados(); }
+    function salvarPTsPorSS(numSS, pts) { ptsPorSS[numSS] = pts; localStorage.setItem('pts_por_ss', JSON.stringify(ptsPorSS)); aplicarFiltros(); }
     function adicionarPT(numSS, pt) { const pts = getPTsPorSS(numSS); if (!pts.find(p => p.numPT === pt.numPT)) { pts.push(pt); salvarPTsPorSS(numSS, pts); expandedRows[numSS] = true; localStorage.setItem('expanded_rows_ss', JSON.stringify(expandedRows)); } }
     function removerPT(numSS, numPT) { if (confirm(`Remover PT ${numPT}?`)) { let pts = getPTsPorSS(numSS); pts = pts.filter(p => p.numPT !== numPT); salvarPTsPorSS(numSS, pts); if (ssAtual) carregarModalPTs(ssAtual); } }
     function toggleExpand(numSS) { if (expandedRows[numSS]) delete expandedRows[numSS]; else expandedRows[numSS] = true; localStorage.setItem('expanded_rows_ss', JSON.stringify(expandedRows)); aplicarFiltros(); }
@@ -1054,14 +687,16 @@
             if (pts.length === 0) csv.push([numSS, ss["Local"], ss["Descrição"], ss["Status"], ss["Requisitante"], ss["Data"], "","","","","",""]);
             else pts.forEach(pt => csv.push([numSS, ss["Local"], ss["Descrição"], ss["Status"], ss["Requisitante"], ss["Data"], pt.numPT, pt.local, pt.supervisor, pt.encarregado, pt.status, pt.data]));
         });
-        const ws = XLSX.utils.aoa_to_sheet(csv);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'SS_e_PTs');
-        XLSX.writeFile(wb, `relatorio_ss_pts_${new Date().toISOString().slice(0,10)}.xlsx`);
+        let csvContent = csv.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_ss_pts_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
         alert('Relatório exportado!');
     }
     
-    // LOGIN
     function handleLoginEnter(event) { if (event.key === 'Enter') fazerLogin(); }
     function carregarUsuarios() { const saved = localStorage.getItem('sistema_usuarios_ss'); if (saved) usuarios = JSON.parse(saved); else { usuarios = [{ id: 1, usuario: "admin", senha: "Admin@123", nivel: "admin", nome: "Administrador" }]; salvarUsuarios(); } }
     function salvarUsuarios() { localStorage.setItem('sistema_usuarios_ss', JSON.stringify(usuarios)); }
@@ -1076,7 +711,7 @@
     function carregarListaUsuarios() { const listaDiv = document.getElementById('listaUsuarios'); if (!listaDiv) return; listaDiv.innerHTML = `<table style="width:100%"><thead><tr><th>Usuário</th><th>Nome</th><th>Nível</th><th>Ações</th></tr></thead><tbody>${usuarios.map(u => `<tr><td>${u.usuario}</td><td>${u.nome || u.usuario}</td><td>${u.nivel === 'admin' ? 'Admin' : 'Usuário'}</td><td><button class="btn btn-primary btn-sm" onclick="abrirModalResetarSenha(${u.id})">Resetar</button>${u.usuario !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id})">Excluir</button>` : ''}</td></tr>`).join('')}</tbody></table>`; }
     function abrirModalResetarSenha(id) { const user = usuarios.find(u => u.id === id); if (user) { document.getElementById('modalSenhaTitle').textContent = `Resetar - ${user.usuario}`; document.getElementById('senhaUsuarioId').value = id; document.getElementById('modalSenha').style.display = 'flex'; const nomeDiv = document.getElementById('nomePrimeiroAcessoGroup'); if (nomeDiv) nomeDiv.style.display = 'none'; } }
     function excluirUsuario(id) { if (usuarioAtual.nivel !== 'admin') return alert('Apenas admin!'); const user = usuarios.find(u => u.id === id); if (user?.usuario === 'admin') return alert('Não pode excluir admin!'); if (confirm(`Excluir ${user?.usuario}?`)) { usuarios = usuarios.filter(u => u.id !== id); salvarUsuarios(); carregarListaUsuarios(); } }
-    function mostrarTab(tab) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); const tabs = { lista: [0, 'tab-lista'], dashboard: [1, 'tab-dashboard'], dashboardPT: [2, 'tab-dashboardPT'], usuarios: [3, 'tab-usuarios'] }; if (tabs[tab]) { document.querySelectorAll('.tab')[tabs[tab][0]].classList.add('active'); document.getElementById(tabs[tab][1]).classList.add('active'); if (tab === 'dashboardPT') atualizarDashboardPTs(); if (tab === 'dashboard') atualizarDashboard(); if (tab === 'usuarios') carregarListaUsuarios(); } }
+    function mostrarTab(tab) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); const tabs = { lista: [0, 'tab-lista'], usuarios: [1, 'tab-usuarios'] }; if (tabs[tab]) { document.querySelectorAll('.tab')[tabs[tab][0]].classList.add('active'); document.getElementById(tabs[tab][1]).classList.add('active'); if (tab === 'usuarios') carregarListaUsuarios(); } }
     
     document.getElementById('searchInput')?.addEventListener('keyup', () => aplicarFiltros());
     window.onclick = (e) => { if (e.target === document.getElementById('modalSenha')) fecharModalSenha(); if (e.target === document.getElementById('modalPTs')) fecharModalPTs(); if (e.target === document.getElementById('modalEditarPT')) fecharModalEditarPT(); };
