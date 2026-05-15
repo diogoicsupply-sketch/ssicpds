@@ -361,7 +361,7 @@
         .status-andamento { background: #dbeafe; color: #2563eb; }
         .status-concluida { background: #d1fae5; color: #059669; }
         .status-atrasada { background: #fee2e2; color: #dc2626; }
-        .status-cancelado { background: #e2e8f0; color: #64748b; }
+        .status-cancelado { color: #ef4444; background: transparent; font-weight: bold; }
 
         /* PT Sub-linhas */
         .pt-row td {
@@ -419,25 +419,27 @@
             font-size: 0.7rem;
         }
 
-        /* Status Select */
+        /* Status Select com cores */
         .status-select {
             padding: 6px 10px;
             border-radius: 20px;
             border: 1px solid #ddd;
-            background: white;
             font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            width: 130px;
         }
 
         .status-select:hover {
-            border-color: #2c6e9e;
+            transform: scale(1.02);
         }
 
-        .status-select option {
-            padding: 8px;
-        }
+        .status-select.planejada { background: #fef3c7; color: #d97706; border-color: #f59e0b; }
+        .status-select.andamento { background: #dbeafe; color: #2563eb; border-color: #3b82f6; }
+        .status-select.concluida { background: #d1fae5; color: #059669; border-color: #10b981; }
+        .status-select.atrasada { background: #fee2e2; color: #dc2626; border-color: #ef4444; }
+        .status-select.cancelada { background: transparent; color: #ef4444; border-color: #ef4444; font-weight: bold; }
 
         /* Modais */
         .modal {
@@ -582,6 +584,12 @@
             
             .pt-card {
                 width: 100%;
+            }
+
+            .status-select {
+                width: 100px;
+                font-size: 0.65rem;
+                padding: 4px 6px;
             }
         }
     </style>
@@ -815,7 +823,7 @@
             aplicarFiltros();
         } catch (error) {
             console.error("Erro:", error);
-            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. </td></tr>';
+            document.getElementById('tabelaSS').innerHTML = '<tr><td colspan="9">❌ Erro ao carregar dados. Verifique a planilha. <tr></tr>';
         }
     }
 
@@ -833,6 +841,17 @@
             toast.textContent = `✅ Status da SS ${numSS} alterado para ${novoStatus}`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2000);
+        }
+    }
+
+    function getStatusClass(status) {
+        switch(status) {
+            case 'Planejada': return 'planejada';
+            case 'Em andamento': return 'andamento';
+            case 'Concluída': return 'concluida';
+            case 'Atrasada': return 'atrasada';
+            case 'Cancelada': return 'cancelada';
+            default: return '';
         }
     }
 
@@ -859,13 +878,12 @@
         const andamento = filtradas.filter(s => s["Status"] === "Em andamento").length;
         const concluida = filtradas.filter(s => s["Status"] === "Concluída").length;
         const atrasada = filtradas.filter(s => s["Status"] === "Atrasada").length;
-        const cancelada = filtradas.filter(s => s["Status"] === "Cancelada").length;
         
         document.getElementById('totalSS').textContent = total;
         document.getElementById('totalPlanejada').textContent = planejada;
         document.getElementById('totalAndamento').textContent = andamento;
         document.getElementById('totalConcluida').textContent = concluida;
-        document.getElementById('totalAtrasada').textContent = atrasada + cancelada;
+        document.getElementById('totalAtrasada').textContent = atrasada;
         
         let todasPTs = [];
         for (let numSS in ptsPorSS) todasPTs.push(...ptsPorSS[numSS]);
@@ -874,7 +892,7 @@
 
     function atualizarTabela(filtradas) {
         const tbody = document.getElementById('tabelaSS');
-        if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada</td></tr>'; return; }
+        if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma solicitação encontrada</td></table>'; return; }
         
         let html = '';
         filtradas.forEach(s => {
@@ -884,6 +902,13 @@
             const expandIcon = pts.length > 0 ? `<span class="expand-icon" onclick="toggleExpand('${numSS}')">${isExpanded ? '▼' : '▶'}</span>` : '•';
             
             const ssJson = JSON.stringify(s).replace(/"/g, '&quot;');
+            const statusClass = getStatusClass(s["Status"]);
+            
+            let optionPlanejada = s["Status"] === "Planejada" ? 'selected' : '';
+            let optionAndamento = s["Status"] === "Em andamento" ? 'selected' : '';
+            let optionConcluida = s["Status"] === "Concluída" ? 'selected' : '';
+            let optionAtrasada = s["Status"] === "Atrasada" ? 'selected' : '';
+            let optionCancelada = s["Status"] === "Cancelada" ? 'selected' : '';
             
             html += `<tr>
                 <td style="text-align:center">${expandIcon}</td>
@@ -891,12 +916,12 @@
                 <td>${s["Local"] || '-'}</td>
                 <td>${(s["Descrição"] || '').substring(0, 45)}${(s["Descrição"] || '').length > 45 ? '...' : ''}</td>
                 <td>
-                    <select class="status-select" data-numss="${numSS}" onchange="alterarStatusSS('${numSS}', this.value)" style="background: ${s["Status"] === 'Planejada' ? '#fef3c7' : s["Status"] === 'Em andamento' ? '#dbeafe' : s["Status"] === 'Concluída' ? '#d1fae5' : s["Status"] === 'Atrasada' ? '#fee2e2' : '#e2e8f0'}; color: ${s["Status"] === 'Planejada' ? '#d97706' : s["Status"] === 'Em andamento' ? '#2563eb' : s["Status"] === 'Concluída' ? '#059669' : s["Status"] === 'Atrasada' ? '#dc2626' : '#64748b'};">
-                        <option value="Planejada" ${s["Status"] === "Planejada" ? 'selected' : ''}>📋 Planejada</option>
-                        <option value="Em andamento" ${s["Status"] === "Em andamento" ? 'selected' : ''}>⚙️ Em andamento</option>
-                        <option value="Concluída" ${s["Status"] === "Concluída" ? 'selected' : ''}>✅ Concluída</option>
-                        <option value="Atrasada" ${s["Status"] === "Atrasada" ? 'selected' : ''}>⚠️ Atrasada</option>
-                        <option value="Cancelada" ${s["Status"] === "Cancelada" ? 'selected' : ''}>❌ Cancelada</option>
+                    <select class="status-select ${statusClass}" data-numss="${numSS}" onchange="alterarStatusSS('${numSS}', this.value)">
+                        <option value="Planejada" ${optionPlanejada}>📋 Planejada</option>
+                        <option value="Em andamento" ${optionAndamento}>⚙️ Em andamento</option>
+                        <option value="Concluída" ${optionConcluida}>✅ Concluída</option>
+                        <option value="Atrasada" ${optionAtrasada}>⚠️ Atrasada</option>
+                        <option value="Cancelada" ${optionCancelada}>❌ Cancelada</option>
                     </select>
                 </td>
                 <td>${s["Requisitante"] || '-'}</td>
